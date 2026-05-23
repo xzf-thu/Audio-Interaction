@@ -244,6 +244,8 @@ def load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device):
     # Instantiate via the full Omni model and pluck out thinker.audio_tower,
     # then load the wrapped audio_tower ckpt (proj.* baked in from the trained
     # audio_adapter.*; see finetune/wrap_audio_tower.py).
+    qwen_omni_ckpt = "/Users/yansc-xzf/Desktop/工作/Mini-Omni3/github/omni3/Mini-Omni3/checkpoints/qwen2_5_omni_config"
+    print(device)
     cfg = AutoConfig.from_pretrained(qwen_omni_ckpt)
     encoder = Qwen2_5OmniForConditionalGeneration._from_config(cfg).thinker.audio_tower
     encoder.load_state_dict(torch.load(audio_tower_ckpt, map_location=device))

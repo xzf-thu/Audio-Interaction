@@ -125,8 +125,8 @@ class Config:
     @property
     def mlp_class(self) -> Type:
         # `self.mlp_class_name` cannot be the type to keep the config serializable
-        import miniomni3.model
-        return getattr(miniomni3.model, self.mlp_class_name)
+        import src.miniomni3.model
+        return getattr(src.miniomni3.model, self.mlp_class_name)
 
     @property
     def norm_class(self) -> Type:

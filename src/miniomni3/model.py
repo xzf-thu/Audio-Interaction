@@ -770,7 +770,9 @@ def build_rope_cache(
         theta = adjusted_theta
 
     # Create position indices `[0, 1, ..., seq_len - 1]`
-    seq_idx = torch.arange(seq_len, device=device) / condense_ratio
+    ### Zhifei fix bug 1:.
+    seq_idx = torch.arange(seq_len, device=device, dtype=torch.float16) / float(condense_ratio)
+    # seq_idx = torch.arange(seq_len, device=device) / condense_ratio
 
     # Calculate the product of position index and $\theta_i$
     idx_theta = torch.outer(seq_idx, theta).repeat(1, 2)
