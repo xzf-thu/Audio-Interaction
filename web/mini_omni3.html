@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mini-Omni3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=JetBrains+Mono:wght@300;400;600&family=Fraunces:ital,wght@0,300;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #07070d;
+    --bg-1: #0d0d18;
+    --ink: #e8e8f0;
+    --ink-dim: #8a8aa3;
+    --accent-a: #7b5cff;   /* violet */
+    --accent-b: #4ea8ff;   /* blue   */
+    --accent-c: #b893ff;   /* lilac  */
+    --danger:   #ff5c8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: radial-gradient(ellipse at 50% 30%, #14142a 0%, var(--bg-0) 60%, #03030a 100%);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* film grain */
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.55;
+    mix-blend-mode: overlay;
+    z-index: 50;
+  }
+
+  .stage {
+    position: relative;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 36px 48px 48px;
+  }
+
+  /* ----- TOP BAR ----- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+  header .corner { display: flex; gap: 14px; align-items: center; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ink-dim);
+    transition: background .25s;
+  }
+  .dot.live { background: var(--danger); box-shadow: 0 0 12px var(--danger); animation: blink 1s infinite; }
+  .dot.talk { background: var(--accent-b); box-shadow: 0 0 12px var(--accent-b); }
+  @keyframes blink { 50% { opacity: .35; } }
+
+  /* ----- CENTER ----- */
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    position: relative;
+  }
+
+  .title {
+    font-family: 'Major Mono Display', monospace;
+    font-size: clamp(28px, 4.6vw, 56px);
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .title .dotglyph {
+    display: inline-block;
+    color: var(--accent-a);
+    text-shadow: 0 0 18px var(--accent-a);
+    margin-left: 6px;
+  }
+  .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-dim);
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    margin-top: -16px;
+  }
+
+  /* spectrum */
+  .spectrum-wrap {
+    position: relative;
+    width: min(640px, 86vw);
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* faint rings behind spectrum */
+  .ring {
+    position: absolute;
+    border: 1px solid rgba(184,147,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ring.r1 { width: 460px; height: 460px; }
+  .ring.r2 { width: 360px; height: 360px; border-color: rgba(78,168,255,0.08); }
+  .ring.r3 { width: 240px; height: 240px; border-color: rgba(184,147,255,0.10); }
+
+  canvas#spectrum {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* response panel (the gradient rounded rect) */
+  .response {
+    position: relative;
+    width: min(720px, 90vw);
+    min-height: 130px;
+    padding: 26px 32px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #4836c8 0%, #6a4eea 45%, #4d7bff 100%);
+    color: #fefeff;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 19px;
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+    box-shadow:
+      0 30px 80px -20px rgba(106,78,234,0.55),
+      0 0 0 1px rgba(255,255,255,0.06) inset,
+      0 1px 0 rgba(255,255,255,0.18) inset;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .45s ease, transform .45s ease;
+    pointer-events: none;
+  }
+  .response.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  .response::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 22px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.45), rgba(255,255,255,0) 40%, rgba(255,255,255,0.18));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .response .caret {
+    display: inline-block;
+    width: 9px; height: 19px;
+    background: #fff;
+    margin-left: 4px;
+    transform: translateY(3px);
+    animation: blink 1s steps(2, end) infinite;
+    border-radius: 1px;
+  }
+
+  .response .label {
+    position: absolute;
+    top: -10px; left: 24px;
+    background: #07070d;
+    padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent-c);
+    border-radius: 6px;
+  }
+
+  /* ----- FOOTER ----- */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+
+  .btn-start {
+    appearance: none;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(232,232,240,0.18);
+    padding: 10px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: all .25s;
+  }
+  .btn-start:hover { border-color: var(--accent-c); color: var(--accent-c); }
+  .btn-start.hidden { display: none; }
+
+  /* tickmarks decoration */
+  .ticks {
+    display: flex;
+    gap: 4px;
+  }
+  .ticks span {
+    width: 2px; height: 10px;
+    background: rgba(232,232,240,0.18);
+  }
+  .ticks span:nth-child(3n) { background: var(--accent-c); height: 14px; }
+
+</style>
+</head>
+<body>
+  <div class="stage">
+
+    <header>
+      <div class="corner">
+        <span>SYS // 001</span>
+        <div class="ticks"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="corner">
+        <span id="state-label">idle</span>
+        <span class="dot" id="state-dot"></span>
+      </div>
+    </header>
+
+    <main>
+      <div class="title">mini-omni3<span class="dotglyph">·</span></div>
+      <div class="subtitle">listening to the room</div>
+
+      <div class="spectrum-wrap">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <canvas id="spectrum" width="1280" height="560"></canvas>
+      </div>
+
+      <div class="response" id="response">
+        <span class="label">RESPONSE</span>
+        <span id="response-text"></span><span class="caret"></span>
+      </div>
+    </main>
+
+    <footer>
+      <span>16 KHZ // MONO // PCM16</span>
+      <button class="btn-start" id="btn-start">TAP TO BEGIN</button>
+      <span id="vad-readout">RMS 0.0000</span>
+    </footer>
+  </div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  // VAD
+  ENERGY_THRESHOLD: 0.012,   // absolute RMS threshold (0..1). Tune per environment.
+  FRAME_MS:         400,     // each frame is exactly 400ms
+  SILENCE_MS:       6000,    // stop after 1.2s of silence
+  SAMPLE_RATE:      16000,   // resample target for backend
+  // Backend
+  AUDIO_ENDPOINT:   "/audio",
+  AUDIO_END_ENDPOINT: "/audio_end",
+  TEXT_STREAM:      "/stream",
+  END_TOKEN:        "<|end|>",
+  BUSY_TOKEN:       "<|busy|>",
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  audioCtx: null,
+  micStream: null,
+  source: null,
+  analyser: null,
+  processor: null,           // ScriptProcessor for raw PCM access
+  freqData: null,            // Uint8Array from analyser
+  // recording / VAD
+  recording: false,          // mic capture running (analyser+processor active)
+  sending:   false,          // currently sending frames (a triggered frame seen recently)
+  pcmBuffer: [],             // Float32 chunks pending in the current 400ms frame
+  pcmBufferSamples: 0,
+  lastTriggerTime: 0,        // ms timestamp of last frame whose RMS exceeded threshold
+  frameTriggered: false,     // whether current frame had a high-energy sample
+  // text streaming
+  sse: null,
+  // UI
+  responseEl: null,
+  responseTextEl: null,
+  dotEl: null,
+  labelEl: null,
+  vadReadout: null,
+};
+
+/* ============================================================
+   SPECTRUM RENDERER  (symmetric on both axes, with jitter)
+   ============================================================ */
+const canvas = document.getElementById('spectrum');
+const ctx = canvas.getContext('2d');
+
+function fitCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const r = canvas.getBoundingClientRect();
+  canvas.width  = r.width  * dpr;
+  canvas.height = r.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', fitCanvas);
+fitCanvas();
+
+let idlePhase = 0;
+function drawSpectrum() {
+  requestAnimationFrame(drawSpectrum);
+
+  const r = canvas.getBoundingClientRect();
+  const W = r.width, H = r.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // grab frequency data (or synth idle motion)
+  const N = 64;                              // bars on one side
+  const data = new Array(N).fill(0);
+
+  if (state.analyser && state.recording) {
+    const fb = state.freqData;
+    state.analyser.getByteFrequencyData(fb);
+    // map first ~N*2 bins into N bars (logarithmic-ish compression)
+    for (let i = 0; i < N; i++) {
+      const idx = Math.floor(Math.pow(i / N, 1.6) * (fb.length * 0.55));
+      data[i] = fb[idx] / 255;
+    }
+  } else {
+    // idle: gentle breathing sine
+    idlePhase += 0.04;
+    for (let i = 0; i < N; i++) {
+      const t = i / N;
+      data[i] = 0.18 + 0.10 * Math.sin(idlePhase + t * 6) + 0.06 * Math.sin(idlePhase * 1.7 + t * 11);
+    }
+  }
+
+  const cx = W / 2, cy = H / 2;
+  const barW = (W * 0.78) / (N * 2);
+  const gap  = barW * 0.35;
+  const usableW = barW + gap;
+  const maxBarH = H * 0.40;
+
+  // ---- draw 4-way symmetric bars (left/right mirror, top/bottom mirror)
+  for (let i = 0; i < N; i++) {
+    const v = data[i];
+    // jitter: random + frequency-based wobble for "shake"
+    const jitter = (Math.random() - 0.5) * 4 * (0.4 + v);
+    const h = Math.max(2, v * maxBarH + jitter);
+
+    const xRight = cx + gap/2 + i * usableW;
+    const xLeft  = cx - gap/2 - (i + 1) * usableW;
+
+    // top half + bottom half (mirror)
+    drawBar(xRight, cy, barW, h, v);
+    drawBar(xLeft,  cy, barW, h, v);
+  }
+
+  // center seam
+  ctx.fillStyle = 'rgba(184,147,255,0.55)';
+  ctx.fillRect(cx - 1, cy - 0.5, 2, 1);
+}
+
+function drawBar(x, cy, w, h, v) {
+  // gradient bar: blue at outer tips, violet near center
+  const grad = ctx.createLinearGradient(x, cy - h, x, cy + h);
+  grad.addColorStop(0,   `rgba(78,168,255,${0.85 * (0.4 + v)})`);
+  grad.addColorStop(0.5, `rgba(184,147,255,${0.95})`);
+  grad.addColorStop(1,   `rgba(78,168,255,${0.85 * (0.4 + v)})`);
+  ctx.fillStyle = grad;
+
+  // top half (above center)
+  ctx.fillRect(x, cy - h, w, h);
+  // bottom half (mirror below)
+  ctx.fillRect(x, cy,     w, h);
+
+  // glow tip
+  if (v > 0.35) {
+    ctx.fillStyle = `rgba(255,255,255,${0.4 * v})`;
+    ctx.fillRect(x, cy - h, w, 1.5);
+    ctx.fillRect(x, cy + h - 1.5, w, 1.5);
+  }
+}
+drawSpectrum();
+
+/* ============================================================
+   UI helpers
+   ============================================================ */
+state.responseEl     = document.getElementById('response');
+state.responseTextEl = document.getElementById('response-text');
+state.dotEl          = document.getElementById('state-dot');
+state.labelEl        = document.getElementById('state-label');
+state.vadReadout     = document.getElementById('vad-readout');
+
+function setUiState(s) {
+  // s: 'idle' | 'listening' | 'sending' | 'speaking'
+  state.dotEl.classList.remove('live', 'talk');
+  if (s === 'listening' || s === 'sending') state.dotEl.classList.add('live');
+  if (s === 'speaking') state.dotEl.classList.add('talk');
+  state.labelEl.textContent = s;
+}
+
+function showResponse(show) {
+  if (show) state.responseEl.classList.add('visible');
+  else      state.responseEl.classList.remove('visible');
+}
+
+/* ============================================================
+   AUDIO PIPELINE
+   ============================================================ */
+async function startMic() {
+  if (state.recording) return;
+
+  // request mic
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      channelCount: 1,
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: false,
+    }
+  });
+  state.micStream = stream;
+
+  const AC = window.AudioContext || window.webkitAudioContext;
+  state.audioCtx = new AC();
+  const inRate = state.audioCtx.sampleRate;
+
+  state.source = state.audioCtx.createMediaStreamSource(stream);
+
+  // analyser for visualization
+  state.analyser = state.audioCtx.createAnalyser();
+  state.analyser.fftSize = 512;
+  state.analyser.smoothingTimeConstant = 0.55;
+  state.freqData = new Uint8Array(state.analyser.frequencyBinCount);
+  state.source.connect(state.analyser);
+
+  // ScriptProcessor (still the most reliable cross-browser path for raw PCM in plain HTML)
+  const bufSize = 4096;
+  state.processor = state.audioCtx.createScriptProcessor(bufSize, 1, 1);
+  state.source.connect(state.processor);
+  state.processor.connect(state.audioCtx.destination);
+
+  // samples per 400ms frame at INPUT rate (we resample at flush time)
+  const samplesPerFrameIn = Math.round((CONFIG.FRAME_MS / 1000) * inRate);
+
+  state.processor.onaudioprocess = (ev) => {
+    if (!state.recording) return;
+    const input = ev.inputBuffer.getChannelData(0);
+    // copy (the underlying buffer is reused)
+    const chunk = new Float32Array(input.length);
+    chunk.set(input);
+
+    // compute RMS for this chunk
+    let sum = 0;
+    for (let i = 0; i < chunk.length; i++) sum += chunk[i] * chunk[i];
+    const rms = Math.sqrt(sum / chunk.length);
+    state.vadReadout.textContent = `RMS ${rms.toFixed(4)}`;
+
+    // append to current frame buffer
+    state.pcmBuffer.push(chunk);
+    state.pcmBufferSamples += chunk.length;
+
+    // if any chunk inside the current frame crosses threshold, mark frame as triggered
+    if (rms >= CONFIG.ENERGY_THRESHOLD) {
+      state.frameTriggered = true;
+    }
+
+    // when we've collected >= 400ms, flush a frame
+    if (state.pcmBufferSamples >= samplesPerFrameIn) {
+      flushFrame(inRate, samplesPerFrameIn);
+    }
+  };
+
+  state.recording = true;
+  setUiState('listening');
+}
+
+function flushFrame(inRate, samplesPerFrameIn) {
+  // splice off exactly samplesPerFrameIn from the buffer
+  const frame = new Float32Array(samplesPerFrameIn);
+  let off = 0, need = samplesPerFrameIn;
+  while (need > 0 && state.pcmBuffer.length) {
+    const head = state.pcmBuffer[0];
+    if (head.length <= need) {
+      frame.set(head, off);
+      off += head.length;
+      need -= head.length;
+      state.pcmBuffer.shift();
+    } else {
+      frame.set(head.subarray(0, need), off);
+      // keep remainder for next frame
+      state.pcmBuffer[0] = head.subarray(need);
+      off += need;
+      need = 0;
+    }
+  }
+  state.pcmBufferSamples -= samplesPerFrameIn;
+
+  const now = performance.now();
+  const triggeredThisFrame = state.frameTriggered;
+  state.frameTriggered = false;
+
+  // decide: do we send this frame?
+  // Rule: start when the FIRST triggered frame arrives, then keep sending every 400ms
+  //       until 1.2s passes with no triggered frame.
+  if (triggeredThisFrame) {
+    if (!state.sending) {
+      state.sending = true;
+      setUiState('sending');
+    }
+    state.lastTriggerTime = now;
+  }
+
+  if (state.sending) {
+    const sinceTrig = now - state.lastTriggerTime;
+    if (sinceTrig > CONFIG.SILENCE_MS) {
+      // silence elapsed -> stop sending and tell backend the utterance ended.
+      state.sending = false;
+      setUiState('listening');
+      sendAudioEnd();
+      return;
+    }
+    // Keep cadence: untriggered frames inside an utterance go out as pure silence
+    // so background noise can't bleed into the model between spoken bursts.
+    if (triggeredThisFrame) {
+      sendFrame(frame, inRate);
+    } else {
+      console.log('[sending] frame below threshold -> sending silence');
+      sendFrame(new Float32Array(samplesPerFrameIn), inRate);
+    }
+  }
+  // else: not sending and frame not triggered -> drop, keep listening
+}
+
+async function sendAudioEnd() {
+  try {
+    await fetch(CONFIG.AUDIO_END_ENDPOINT, { method: 'POST' });
+  } catch (e) {
+    console.warn('audio_end send failed', e);
+  }
+}
+
+/* resample Float32 from inRate to 16000 (linear), then pack to Int16 LE */
+function encodeFrameForUpload(frame, inRate) {
+  const outRate = CONFIG.SAMPLE_RATE;
+  let resampled;
+  if (inRate === outRate) {
+    resampled = frame;
+  } else {
+    const ratio = inRate / outRate;
+    const outLen = Math.round(frame.length / ratio);
+    resampled = new Float32Array(outLen);
+    for (let i = 0; i < outLen; i++) {
+      const srcIdx = i * ratio;
+      const i0 = Math.floor(srcIdx);
+      const i1 = Math.min(i0 + 1, frame.length - 1);
+      const t = srcIdx - i0;
+      resampled[i] = frame[i0] * (1 - t) + frame[i1] * t;
+    }
+  }
+  // float -> int16
+  const pcm = new Int16Array(resampled.length);
+  for (let i = 0; i < resampled.length; i++) {
+    let s = Math.max(-1, Math.min(1, resampled[i]));
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return pcm.buffer;
+}
+
+async function sendFrame(frame, inRate) {
+  const buf = encodeFrameForUpload(frame, inRate);
+  try {
+    await fetch(CONFIG.AUDIO_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Sample-Rate': String(CONFIG.SAMPLE_RATE),
+        'X-Frame-Ms':    String(CONFIG.FRAME_MS),
+        'X-Format':      'pcm_s16le_mono',
+      },
+      body: buf,
+    });
+  } catch (e) {
+    console.warn('audio send failed', e);
+  }
+}
+
+function stopMic() {
+  state.recording = false;
+  state.sending = false;
+  state.pcmBuffer = [];
+  state.pcmBufferSamples = 0;
+  state.frameTriggered = false;
+  if (state.processor) { try { state.processor.disconnect(); } catch(_){} state.processor.onaudioprocess = null; state.processor = null; }
+  if (state.source)    { try { state.source.disconnect(); } catch(_){} state.source = null; }
+  if (state.analyser)  { try { state.analyser.disconnect(); } catch(_){} state.analyser = null; }
+  if (state.micStream) { state.micStream.getTracks().forEach(t => t.stop()); state.micStream = null; }
+  if (state.audioCtx)  { state.audioCtx.close().catch(()=>{}); state.audioCtx = null; }
+  setUiState('idle');
+}
+
+/* ============================================================
+   TEXT STREAMING from Flask (SSE)
+   ============================================================ */
+function openTextStream() {
+  if (state.sse) return;
+  const es = new EventSource(CONFIG.TEXT_STREAM);
+  state.sse = es;
+
+  es.onmessage = (ev) => {
+    const chunk = ev.data;
+
+    // Busy signal from backend: stop mic now, prepare panel.
+    if (chunk.includes(CONFIG.BUSY_TOKEN)) {
+      stopMic();
+      state.responseTextEl.textContent = '';
+      showResponse(true);
+      setUiState('speaking');
+      return;
+    }
+
+    // First text chunk of a new utterance -> enter "speaking" mode (fallback
+    // if BUSY_TOKEN was missed for any reason).
+    if (!state.responseEl.classList.contains('visible')) {
+      stopMic();
+      state.responseTextEl.textContent = '';
+      showResponse(true);
+      setUiState('speaking');
+    }
+
+    // end token?
+    if (chunk.includes(CONFIG.END_TOKEN)) {
+      const before = chunk.split(CONFIG.END_TOKEN)[0];
+      if (before) state.responseTextEl.textContent += before;
+      setTimeout(() => {
+        showResponse(false);
+        startMic().catch(err => console.error(err));
+      }, 600);
+      return;
+    }
+
+    state.responseTextEl.textContent += chunk;
+  };
+
+  es.onerror = (e) => {
+    console.warn('SSE error', e);
+    // browser will auto-reconnect
+  };
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+const btn = document.getElementById('btn-start');
+btn.addEventListener('click', async () => {
+  btn.classList.add('hidden');
+  try {
+    await startMic();
+    openTextStream();
+  } catch (err) {
+    console.error(err);
+    alert('Microphone permission is required.');
+    btn.classList.remove('hidden');
+  }
+});
+</script>
+</body>
+</html>

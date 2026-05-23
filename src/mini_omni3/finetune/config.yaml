@@ -1,0 +1,56 @@
+# Example finetune config. Pass via `python full.py --config <this-file>`.
+#
+# Paths use ${ENV_VAR} interpolation — export these in your shell before running:
+#   DATA_ROOT        base dir for the prepared training jsonls
+#   CHECKPOINT_ROOT  base dir for the model config + training outputs
+
+project:
+  version: default   # used as out_dir subdirectory; e.g. "run-2024-01-15"
+
+paths:
+  # Directory containing model_config.yaml (model architecture).
+  config_dir: ${CHECKPOINT_ROOT}/qwen-2.5-3B
+  # Output root; the actual run goes to <out_dir>/<version>.
+  out_dir: ${CHECKPOINT_ROOT}/finetune-output
+  # Pretrained weights to seed training from (skipped if `resume` is set).
+  init_checkpoint: ${CHECKPOINT_ROOT}/init.pt
+
+training:
+  devices: 8
+  global_batch_size: 64
+  micro_batch_size: 2
+  max_lr: 2e-4
+  lr_warmup_steps: 200
+  epochs: 2
+  max_seq_length: 4096
+  save_interval: 1000
+  log_interval: 3
+  optimizer: AdamW
+
+eval:
+  eval_data_percentage: 0.0005
+  eval_batch_size: 1
+  eval_interval: 400
+  max_iters: 500
+  max_new_tokens: 2000
+  # Once step_count >= this value, keep the top-3 lowest-train-loss checkpoints.
+  save_best_after_step: 8000
+
+logger_name: tensorboard
+seed: 1337
+resume: false   # or "auto", or a path to a lit_model.pth
+
+data_sources:
+  multi-round_dialogue:
+    folders:
+      - ${DATA_ROOT}/train_online_talk_multi-round_dialogue
+    type_name: talk_train_data
+    enabled: true
+    use_turn_map: true
+
+  "audio qa":
+    folders:
+      - ${DATA_ROOT}/train_online_FMA_and_audioset
+    type_name: audio_qa_train_data
+    enabled: true
+    use_turn_map: false
