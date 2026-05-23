@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Optional, Union, Iterable, Iterator
 
-from mini_omni3.utils import fix_and_load_json
+from src.miniomni3.utils import fix_and_load_json
 import torch
 
 

@@ -8,7 +8,7 @@ from typing import Any, Literal, Optional, Type, Union
 import torch
 import yaml
 from typing_extensions import Self
-from mini_omni3.utils import find_multiple
+from src.miniomni3.utils import find_multiple
 
 
 @dataclass
@@ -125,8 +125,8 @@ class Config:
     @property
     def mlp_class(self) -> Type:
         # `self.mlp_class_name` cannot be the type to keep the config serializable
-        import mini_omni3.model
-        return getattr(mini_omni3.model, self.mlp_class_name)
+        import miniomni3.model
+        return getattr(miniomni3.model, self.mlp_class_name)
 
     @property
     def norm_class(self) -> Type:
@@ -136,7 +136,7 @@ class Config:
 
         if self.norm_class_name == "RMSNorm":
 
-            from mini_omni3.model import RMSNorm
+            from src.miniomni3.model import RMSNorm
 
             return partial(RMSNorm, add_unit_offset="Gemma" in self.name)
 

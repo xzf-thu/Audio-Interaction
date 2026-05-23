@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mini_omni3.generate.base import run_inference
+from src.miniomni3.generate.base import run_inference
 
 
 CHECKPOINT_DIR = ""

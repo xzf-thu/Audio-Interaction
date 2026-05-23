@@ -22,9 +22,9 @@ from torch.utils.data import DataLoader
 from torchmetrics import RunningMean
 from tqdm import tqdm
 
-from mini_omni3.args import EvalArgs, TrainArgs
-from mini_omni3.model import GPT, Block, Config
-from mini_omni3.utils import (
+from src.miniomni3.args import EvalArgs, TrainArgs
+from src.miniomni3.model import GPT, Block, Config
+from src.miniomni3.utils import (
     CycleIterator,
     check_nvlink_connectivity,
     choose_logger,
@@ -39,7 +39,7 @@ from mini_omni3.utils import (
     num_parameters,
     parse_devices,
 )
-from mini_omni3.finetune.dataloader import get_dataloaders
+from src.miniomni3.finetune.dataloader import get_dataloaders
 
 
 def load_config(path):

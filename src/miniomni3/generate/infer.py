@@ -1,4 +1,4 @@
-"""Streaming offline inference primitives for the audio-enhanced GPT.
+"""Streaming offline inference for the audio-enhanced GPT.
 
 The model alternates between two states inside `streaming_generate`:
   - LISTENING: each step consumes one encoder-output chunk of audio. The model
@@ -6,13 +6,11 @@ The model alternates between two states inside `streaming_generate`:
   - SPEAKING:  autoregressive text generation until TEXT_END, then back to
     LISTENING for the next audio chunk.
 
-Public surface (used by `infer.py` at the repo root and by `web/server.py`):
-    SYSTEM_PROMPT, AUDIO_TOKENS_PER_CHUNK
-    sample, encode_audio_chunks, streaming_generate
-    set_seed, load_model, load_audio_encoder
-    run_inference (end-to-end entry point)
+Each round prompts for an audio file path on stdin and prints the model's reply.
+Ctrl-C to stop.
 """
 
+import argparse
 import random
 from pathlib import Path
 from typing import List, Optional
@@ -23,13 +21,23 @@ import torch
 import whisper
 from transformers import AutoConfig, Qwen2_5OmniForConditionalGeneration
 
-from mini_omni3.dataset.TOKENS import (
+from src.miniomni3.dataset.tokens import (
     ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
     SYSTEM, TEXT_BEGIN, TEXT_END,
 )
-from mini_omni3.model import GPT, Config
-from mini_omni3.tokenizer import Tokenizer
-from mini_omni3.utils import get_default_supported_precision, load_checkpoint
+from src.miniomni3.model import GPT, Config
+from src.miniomni3.tokenizer import Tokenizer
+from src.miniomni3.utils import get_default_supported_precision, load_checkpoint
+
+
+# ============================================================
+# Fill in these paths before running.
+# ============================================================
+MODEL_CONFIG_DIR   = ""  # directory containing model_config.yaml (the model architecture config)
+TRAINED_CHECKPOINT = ""  # path to the trained model state-dict .pt file
+QWEN_OMNI_CKPT     = ""  # path to the Qwen2.5-Omni model directory
+AUDIO_TOWER_CKPT   = ""  # path to the finetuned audio_tower .pth file
+# ============================================================
 
 
 SYSTEM_PROMPT = (
@@ -142,28 +150,21 @@ def streaming_generate(
     prefix_ids: torch.Tensor,
     *,
     rounds: int = 10,
-    audio_paths: Optional[List[str]] = None,
     max_returned_tokens: int = 4096,
     temperature: float = 1.0,
     top_k: Optional[int] = None,
     top_p: float = 1.0,
 ):
-    """Stream audio→text. If `audio_paths` is given, run one round per path
-    non-interactively (offline); otherwise prompt stdin each round (online)."""
+    """Interactive loop: prompt for an audio path, stream audio→text, decode and print."""
     device = prefix_ids.device
     token = prefix_ids
     input_pos = torch.arange(0, prefix_ids.size(0), device=device, dtype=torch.int64)
     input_pos_maxp1 = _init_input_pos_maxp1(model, prefix_ids.size(0), device)
 
     turns: List[List[int]] = []  # one inner list per assistant turn, starting at TEXT_BEGIN
-    n_rounds = len(audio_paths) if audio_paths is not None else rounds
 
-    for round_idx in range(n_rounds):
-        if audio_paths is not None:
-            audio_path = audio_paths[round_idx]
-            print(f"Round {round_idx} — audio: {audio_path}")
-        else:
-            audio_path = input(f"Round {round_idx} — enter audio path: ").strip()
+    for round_idx in range(rounds):
+        audio_path = input(f"Round {round_idx} — enter audio path: ").strip()
         audio_chunks = encode_audio_chunks(audio_path, audio_encoder, device)
         print(f"[{len(audio_chunks)} audio chunks]")
 
@@ -207,20 +208,29 @@ def streaming_generate(
 
         # Decode and print this round's assistant turns.
         # Each turn looks like [TEXT_BEGIN, EMOTION, ...text..., TEXT_END]; strip both ends.
-        # In offline mode (audio_paths supplied) also print silent decisions so the
-        # demo viewer sees the model's "no reply" outcomes explicitly.
         for piece_idx, turn in enumerate(turns, start=1):
-            if turn[0] == TEXT_BEGIN:
-                decoded = tokenizer.decode(torch.tensor(turn[2:-1]))
-                if decoded:
-                    print(f"\n=== Audio piece {piece_idx} ===\n{decoded}\n")
-            elif audio_paths is not None:
-                print(f"\n=== Audio piece {piece_idx} === (silent — kept listening)\n")
+            decoded = tokenizer.decode(torch.tensor(turn[2:-1]))
+            if decoded:
+                print(f"\n=== Audio piece {piece_idx} ===\n{decoded}\n")
 
     return turns
 
 
 # === Setup ===
+
+def _require_paths() -> None:
+    missing = [n for n, v in [
+        ("MODEL_CONFIG_DIR", MODEL_CONFIG_DIR),
+        ("TRAINED_CHECKPOINT", TRAINED_CHECKPOINT),
+        ("QWEN_OMNI_CKPT", QWEN_OMNI_CKPT),
+        ("AUDIO_TOWER_CKPT", AUDIO_TOWER_CKPT),
+    ] if not v]
+    if missing:
+        raise RuntimeError(
+            f"Path constants not set in infer.py: {missing}. "
+            "Edit the top of this file to point at your files."
+        )
+
 
 def set_seed(seed: int = 1337) -> None:
     random.seed(seed)
@@ -251,54 +261,28 @@ def load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device):
     return encoder
 
 
-def resolve_checkpoint_paths(checkpoint_dir: str):
-    """Map a single checkpoint root → (model_config_dir, trained_checkpoint,
-    qwen_omni_ckpt, audio_tower_ckpt). The release layout is:
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--rounds", type=int, default=10,
+                        help="number of audio prompts to handle in one process (Ctrl-C to stop early)")
+    parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument("--max-new-tokens", type=int, default=4096)
+    args = parser.parse_args()
 
-        <checkpoint_dir>/
-            model_config.yaml + tokenizer.json + ...   ← model_config_dir = root
-            MiniOmni3_LM.pt
-            MiniOmni3_ChunkwisedEncoder.pth
-            qwen_2_5_omni_config/
-    """
-    ckpt = Path(checkpoint_dir)
-    return (
-        str(ckpt),
-        str(ckpt / "MiniOmni3_LM.pt"),
-        str(ckpt / "qwen_2_5_omni_config"),
-        str(ckpt / "MiniOmni3_ChunkwisedEncoder.pth"),
-    )
+    _require_paths()
+    device = "cuda:0"
+    set_seed(args.seed)
 
-
-def run_inference(
-    *,
-    checkpoint_dir: str,
-    rounds: int = 10,
-    audio_paths: Optional[List[str]] = None,
-    seed: int = 1337,
-    max_new_tokens: int = 4096,
-    device: str = "cuda:0",
-):
-    """End-to-end: build fabric, load model + audio encoder, run streaming_generate.
-
-    If `audio_paths` is given, runs one round per path non-interactively
-    (offline mode). Otherwise prompts stdin each round (online mode).
-    """
-    if not checkpoint_dir:
-        raise RuntimeError("`checkpoint_dir` is empty — set it before calling run_inference().")
-    model_config_dir, trained_checkpoint, qwen_omni_ckpt, audio_tower_ckpt = \
-        resolve_checkpoint_paths(checkpoint_dir)
-
-    set_seed(seed)
     fabric = L.Fabric(
         devices=1, num_nodes=1, strategy="auto",
         precision=get_default_supported_precision(training=False),
         loggers="tensorboard",
     )
-    model = load_model(fabric, model_config_dir, trained_checkpoint)
-    audio_encoder = load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device)
-    tokenizer = Tokenizer(model_config_dir)
+    model = load_model(fabric, MODEL_CONFIG_DIR, TRAINED_CHECKPOINT)
+    audio_encoder = load_audio_encoder(QWEN_OMNI_CKPT, AUDIO_TOWER_CKPT, device)
+    tokenizer = Tokenizer(MODEL_CONFIG_DIR)
 
+    # Build the [ONLINE, ENGLISH, SYSTEM, system_prompt] prefix that every round starts from.
     system_ids = tokenizer.encode(SYSTEM_PROMPT).cpu().tolist()
     prefix_ids = torch.LongTensor(
         [ONLINE, ENGLISH, SYSTEM, TEXT_BEGIN] + system_ids + [TEXT_END]
@@ -309,10 +293,13 @@ def run_inference(
     model.eval()
     try:
         with torch.inference_mode():
-            return streaming_generate(
+            streaming_generate(
                 model, audio_encoder, tokenizer, prefix_ids,
-                rounds=rounds, audio_paths=audio_paths,
-                max_returned_tokens=max_new_tokens,
+                rounds=args.rounds, max_returned_tokens=args.max_new_tokens,
             )
     finally:
         model.clear_kv_cache()
+
+
+if __name__ == "__main__":
+    main()

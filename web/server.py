@@ -36,16 +36,16 @@ import torch
 import whisper
 from flask import Flask, Response, request, send_from_directory
 
-from mini_omni3.dataset.TOKENS import (
+from src.miniomni3.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
     SYSTEM, TEXT_BEGIN, TEXT_END,
 )
-from mini_omni3.generate.base import (
+from src.miniomni3.generate.base import (
     AUDIO_TOKENS_PER_CHUNK, SYSTEM_PROMPT,
     load_audio_encoder, load_model, resolve_checkpoint_paths, sample, set_seed,
 )
-from mini_omni3.tokenizer import Tokenizer
-from mini_omni3.utils import get_default_supported_precision
+from src.miniomni3.tokenizer import Tokenizer
+from src.miniomni3.utils import get_default_supported_precision
 
 
 # Single source of truth for all weights — see README for the expected layout.

@@ -21,13 +21,13 @@ import torch
 from tqdm import tqdm
 from transformers import AutoConfig, Qwen2_5OmniForConditionalGeneration
 
-from mini_omni3.dataset.utils.load_audio import _load_mel
-from mini_omni3.dataset.TOKENS import (
+from src.miniomni3.dataset.utils.load_audio import _load_mel
+from src.miniomni3.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, AUDIO_END, AUDIO_PAD, ENGLISH, MASK,
     OFFLINE, SYSTEM, TEXT_BEGIN, TEXT_END, USER,
 )
-from mini_omni3.generate.base import resolve_checkpoint_paths
-from mini_omni3.tokenizer import Tokenizer
+from src.miniomni3.generate.base import resolve_checkpoint_paths
+from src.miniomni3.tokenizer import Tokenizer
 
 
 # ============================================================

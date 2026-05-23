@@ -17,7 +17,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from mini_omni3.dataset.TOKENS import MASK, PAD, TEXT_END
+from src.miniomni3.dataset.TOKENS import MASK, PAD, TEXT_END
 
 
 # Fallback for any None / () that slips into input_ids/labels from upstream data prep.

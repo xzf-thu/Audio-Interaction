@@ -26,14 +26,14 @@ import soundfile as sf
 import whisper
 from tqdm import tqdm
 
-from mini_omni3.dataset.utils.extract_online_feature import extract_audio_features
-from mini_omni3.dataset.utils.load_audio import SAMPLES_PER_FRAME, _load_mel
-from mini_omni3.dataset.TOKENS import (
+from src.miniomni3.dataset.utils.extract_online_feature import extract_audio_features
+from src.miniomni3.dataset.utils.load_audio import SAMPLES_PER_FRAME, _load_mel
+from src.miniomni3.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, EMOTION_TO_ID, ENGLISH, KEEP_SILENCE, MASK,
     NORMAL, ONLINE, PAD, SYSTEM, TEXT_BEGIN, TEXT_END,
 )
-from mini_omni3.generate.base import resolve_checkpoint_paths
-from mini_omni3.tokenizer import Tokenizer
+from src.miniomni3.generate.base import resolve_checkpoint_paths
+from src.miniomni3.tokenizer import Tokenizer
 
 
 # ============================================================
