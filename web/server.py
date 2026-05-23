@@ -40,7 +40,7 @@ from mini_omni3.dataset.tokens import (
     ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
     SYSTEM, TEXT_BEGIN, TEXT_END,
 )
-from mini_omni3.generate.infer import (
+from mini_omni3.generate.base import (
     AUDIO_TOKENS_PER_CHUNK, SYSTEM_PROMPT,
     load_audio_encoder, load_model, sample, set_seed,
 )
@@ -48,14 +48,12 @@ from mini_omni3.tokenizer import Tokenizer
 from mini_omni3.utils import get_default_supported_precision
 
 
-# ============================================================
-# Fill in these paths before running.
-# ============================================================
-MODEL_CONFIG_DIR   = ""  # directory containing model_config.yaml
-TRAINED_CHECKPOINT = ""  # path to the trained model state-dict .pt
-QWEN_OMNI_CKPT     = ""  # Qwen2.5-Omni model directory
-AUDIO_TOWER_CKPT   = ""  # finetuned audio_tower .pth (wrapped: proj weights baked in)
-# ============================================================
+# Layout under <repo>/checkpoint/ — see README for what to put there.
+_CKPT = Path(__file__).resolve().parent.parent / "checkpoint"
+MODEL_CONFIG_DIR   = str(_CKPT / "model_config")
+TRAINED_CHECKPOINT = str(_CKPT / "state_dict.pt")
+QWEN_OMNI_CKPT     = str(_CKPT / "qwen2.5-omni_config")
+AUDIO_TOWER_CKPT   = str(_CKPT / "audio_tower.pth")
 
 
 # === Audio framing constants (must match what the frontend sends) ===
@@ -74,20 +72,6 @@ PORT          = int(os.environ.get("PORT", "5001"))
 FRONTEND_FILE = "mini_omni3.html"
 END_TOKEN_STR = "<|end|>"
 BUSY_TOKEN_STR = "<|busy|>"
-
-
-def _require_paths() -> None:
-    missing = [n for n, v in [
-        ("MODEL_CONFIG_DIR",   MODEL_CONFIG_DIR),
-        ("TRAINED_CHECKPOINT", TRAINED_CHECKPOINT),
-        ("QWEN_OMNI_CKPT",     QWEN_OMNI_CKPT),
-        ("AUDIO_TOWER_CKPT",   AUDIO_TOWER_CKPT),
-    ] if not v]
-    if missing:
-        raise RuntimeError(
-            f"Path constants not set in server.py: {missing}. "
-            "Edit the top of this file to point at your files."
-        )
 
 
 # === Audio: PCM -> log-mel -> audio_tower -> 10-frame feature chunk ===
@@ -152,7 +136,6 @@ def encode_frame(pcm_f32: np.ndarray) -> torch.Tensor:
 
 # === Boot: load model + audio encoder once ===
 
-_require_paths()
 set_seed(1337)
 
 print(f"[boot] device={DEVICE}")

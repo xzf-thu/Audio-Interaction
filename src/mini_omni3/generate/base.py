@@ -1,4 +1,4 @@
-"""Streaming offline inference for the audio-enhanced GPT.
+"""Streaming offline inference primitives for the audio-enhanced GPT.
 
 The model alternates between two states inside `streaming_generate`:
   - LISTENING: each step consumes one encoder-output chunk of audio. The model
@@ -6,11 +6,13 @@ The model alternates between two states inside `streaming_generate`:
   - SPEAKING:  autoregressive text generation until TEXT_END, then back to
     LISTENING for the next audio chunk.
 
-Each round prompts for an audio file path on stdin and prints the model's reply.
-Ctrl-C to stop.
+Public surface (used by `infer.py` at the repo root and by `web/server.py`):
+    SYSTEM_PROMPT, AUDIO_TOKENS_PER_CHUNK
+    sample, encode_audio_chunks, streaming_generate
+    set_seed, load_model, load_audio_encoder
+    run_inference (end-to-end entry point)
 """
 
-import argparse
 import random
 from pathlib import Path
 from typing import List, Optional
@@ -28,16 +30,6 @@ from mini_omni3.dataset.tokens import (
 from mini_omni3.model import GPT, Config
 from mini_omni3.tokenizer import Tokenizer
 from mini_omni3.utils import get_default_supported_precision, load_checkpoint
-
-
-# ============================================================
-# Fill in these paths before running.
-# ============================================================
-MODEL_CONFIG_DIR   = ""  # directory containing model_config.yaml (the model architecture config)
-TRAINED_CHECKPOINT = ""  # path to the trained model state-dict .pt file
-QWEN_OMNI_CKPT     = ""  # path to the Qwen2.5-Omni model directory
-AUDIO_TOWER_CKPT   = ""  # path to the finetuned audio_tower .pth file
-# ============================================================
 
 
 SYSTEM_PROMPT = (
@@ -218,20 +210,6 @@ def streaming_generate(
 
 # === Setup ===
 
-def _require_paths() -> None:
-    missing = [n for n, v in [
-        ("MODEL_CONFIG_DIR", MODEL_CONFIG_DIR),
-        ("TRAINED_CHECKPOINT", TRAINED_CHECKPOINT),
-        ("QWEN_OMNI_CKPT", QWEN_OMNI_CKPT),
-        ("AUDIO_TOWER_CKPT", AUDIO_TOWER_CKPT),
-    ] if not v]
-    if missing:
-        raise RuntimeError(
-            f"Path constants not set in infer.py: {missing}. "
-            "Edit the top of this file to point at your files."
-        )
-
-
 def set_seed(seed: int = 1337) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -261,28 +239,37 @@ def load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device):
     return encoder
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--rounds", type=int, default=10,
-                        help="number of audio prompts to handle in one process (Ctrl-C to stop early)")
-    parser.add_argument("--seed", type=int, default=1337)
-    parser.add_argument("--max-new-tokens", type=int, default=4096)
-    args = parser.parse_args()
+def run_inference(
+    *,
+    model_config_dir: str,
+    trained_checkpoint: str,
+    qwen_omni_ckpt: str,
+    audio_tower_ckpt: str,
+    rounds: int = 10,
+    seed: int = 1337,
+    max_new_tokens: int = 4096,
+    device: str = "cuda:0",
+):
+    """End-to-end: build fabric, load model + audio encoder, run streaming_generate."""
+    for name, value in [
+        ("model_config_dir", model_config_dir),
+        ("trained_checkpoint", trained_checkpoint),
+        ("qwen_omni_ckpt", qwen_omni_ckpt),
+        ("audio_tower_ckpt", audio_tower_ckpt),
+    ]:
+        if not value:
+            raise RuntimeError(f"`{name}` is empty — set it before calling run_inference().")
 
-    _require_paths()
-    device = "cuda:0"
-    set_seed(args.seed)
-
+    set_seed(seed)
     fabric = L.Fabric(
         devices=1, num_nodes=1, strategy="auto",
         precision=get_default_supported_precision(training=False),
         loggers="tensorboard",
     )
-    model = load_model(fabric, MODEL_CONFIG_DIR, TRAINED_CHECKPOINT)
-    audio_encoder = load_audio_encoder(QWEN_OMNI_CKPT, AUDIO_TOWER_CKPT, device)
-    tokenizer = Tokenizer(MODEL_CONFIG_DIR)
+    model = load_model(fabric, model_config_dir, trained_checkpoint)
+    audio_encoder = load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device)
+    tokenizer = Tokenizer(model_config_dir)
 
-    # Build the [ONLINE, ENGLISH, SYSTEM, system_prompt] prefix that every round starts from.
     system_ids = tokenizer.encode(SYSTEM_PROMPT).cpu().tolist()
     prefix_ids = torch.LongTensor(
         [ONLINE, ENGLISH, SYSTEM, TEXT_BEGIN] + system_ids + [TEXT_END]
@@ -293,13 +280,9 @@ def main():
     model.eval()
     try:
         with torch.inference_mode():
-            streaming_generate(
+            return streaming_generate(
                 model, audio_encoder, tokenizer, prefix_ids,
-                rounds=args.rounds, max_returned_tokens=args.max_new_tokens,
+                rounds=rounds, max_returned_tokens=max_new_tokens,
             )
     finally:
         model.clear_kv_cache()
-
-
-if __name__ == "__main__":
-    main()

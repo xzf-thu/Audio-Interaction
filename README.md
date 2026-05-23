@@ -104,18 +104,33 @@ PYTHONPATH=src python src/mini_omni3/finetune/train.py --config src/mini_omni3/f
 
 ## 3. Inference
 
+Both `infer.py` and `web/server.py` read everything from a single `checkpoint/`
+folder at the repo root. Create it with the following layout:
+
+```
+Mini-Omni3/
+├── infer.py
+├── checkpoint/                 (you create this)
+│   ├── model_config/           model_config.yaml + tokenizer files (our HF release)
+│   ├── qwen2.5-omni_config/    Qwen2.5-Omni-3B from the official HF repo
+│   ├── state_dict.pt           trained GPT weights (our HF release)
+│   └── audio_tower.pth         wrapped audio_tower, proj.* baked in (our HF release)
+└── ...
+```
+
+Sources:
+
+| Item | Where to get it |
+|---|---|
+| `checkpoint/model_config/`  | Our HuggingFace release |
+| `checkpoint/state_dict.pt`  | Our HuggingFace release (or extract from your own training: `python src/mini_omni3/finetune/extract_state_dict.py <out_dir>/step-NNNNNN/lit_model.pth checkpoint/state_dict.pt`) |
+| `checkpoint/audio_tower.pth`| Our HuggingFace release (produced by `src/mini_omni3/finetune/wrap_audio_tower.py`) |
+| `checkpoint/qwen2.5-omni_config/` | [Qwen/Qwen2.5-Omni-3B](https://huggingface.co/Qwen/Qwen2.5-Omni-3B) |
+
+Once `checkpoint/` is filled in:
+
 ```bash
-# 1. Extract the model weights from a training checkpoint
-#    (training writes <out_dir>/step-NNNNNN/lit_model.pth alongside optimizer state).
-python src/mini_omni3/finetune/extract_state_dict.py \
-    <out_dir>/step-NNNNNN/lit_model.pth state_dict.pt
-
-# 2. Edit the four path constants at the top of src/mini_omni3/generate/infer.py
-#    (MODEL_CONFIG_DIR, TRAINED_CHECKPOINT, QWEN_OMNI_CKPT, AUDIO_TOWER_CKPT).
-#    Point TRAINED_CHECKPOINT at state_dict.pt from step 1.
-
-# 3. Launch
-PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 python src/mini_omni3/generate/infer.py
+PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 python infer.py
 ```
 
 The script prompts for an audio file path per round and prints the reply.
@@ -126,17 +141,12 @@ The script prompts for an audio file path per round and prints the reply.
 
 A browser-based streaming UI is provided under `web/`. It captures mic audio
 in the browser, ships 400 ms PCM frames to a Flask backend that runs the same
-model as `infer.py`, and streams the text reply back over SSE.
+model as `infer.py`, and streams the text reply back over SSE. It reads the
+same `checkpoint/` folder as §3.
 
 ```bash
-# 1. Edit the four path constants at the top of web/server.py
-#    (MODEL_CONFIG_DIR, TRAINED_CHECKPOINT, QWEN_OMNI_CKPT, AUDIO_TOWER_CKPT) —
-#    same values as infer.py.
-
-# 2. Launch
 PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 python web/server.py
-
-# 3. Open http://<host>:5001/ in a browser, allow microphone access, and talk.
+# Open http://<host>:5001/ in a browser, allow microphone access, and talk.
 ```
 
 Endpoints (used by `web/mini_omni3.html`; documented for reference):
