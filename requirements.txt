@@ -1,0 +1,12 @@
+PyQt6
+sounddevice
+flask_socketio
+flask
+pydub
+librosa
+openai-whisper
+transformers==4.57.6
+torch
+torchvision
+torchaudio
+litgpt==0.5.8
