@@ -1,13 +1,11 @@
+# Mini-Omni3: A unified Audio Interaction Model
+
 <p align="center">
   <img src="assets/figures/top.png" alt="Mini-Omni3 Logo" width="80%">
 </p>
 
 
-<h1 align="center">Mini-Omni3: An Always-On Streaming Audio Language Model for the Real World</h1>
-
 We introduce **MINI-OMNI3**, the first **always-on Streaming Audio Language Model (SALM)** that follows **every audio task — understanding, transcription, translation, full-spectrum conversation, and proactive intervention — in a single streaming session**, deciding frame by frame via `⟨Silent⟩` / `⟨Speak⟩` control tokens when and how to respond. Trained on **260,000 hours of streaming audio** with our unified **SoundFlow** framework, it stays **competitive with strong offline baselines** — and sometimes beats them. If you like us, please give us a star ✨.
-
-<p align="center"><u><em>The world never stops making sound — neither should your model.</em></u></p>
 
 
 <p align="center">
