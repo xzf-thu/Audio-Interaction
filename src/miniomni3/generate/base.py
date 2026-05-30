@@ -1,4 +1,4 @@
-"""Streaming offline inference primitives for the audio-enhanced GPT.
+"""Core streaming generation primitives for the audio-enhanced GPT.
 
 The model alternates between two states inside `streaming_generate`:
   - LISTENING: each step consumes one encoder-output chunk of audio. The model
@@ -6,39 +6,46 @@ The model alternates between two states inside `streaming_generate`:
   - SPEAKING:  autoregressive text generation until TEXT_END, then back to
     LISTENING for the next audio chunk.
 
-Public surface (used by `infer.py` at the repo root and by `web/server.py`):
-    SYSTEM_PROMPT, AUDIO_TOKENS_PER_CHUNK
+Public surface:
+    AUDIO_TOKENS_PER_CHUNK
     sample, encode_audio_chunks, streaming_generate
-    set_seed, load_model, load_audio_encoder
-    run_inference (end-to-end entry point)
 """
-
-import random
-from pathlib import Path
-from typing import List, Optional
-
-import lightning as L
-import numpy as np
-import torch
-import whisper
-from transformers import AutoConfig, Qwen2_5OmniForConditionalGeneration
-
-from src.miniomni3.dataset.TOKENS import (
-    ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
-    SYSTEM, TEXT_BEGIN, TEXT_END,
-)
-from src.miniomni3.model import GPT, Config
-from src.miniomni3.tokenizer import Tokenizer
-from src.miniomni3.utils import get_default_supported_precision, load_checkpoint
-
-
 SYSTEM_PROMPT = (
     "You are a helpful assistant. When there is no user text, if the audio contains a question, "
     "please answer it. If it is a sound effect, determine based on the sound whether help is needed."
 )
 
+
+
+import os
+import sys
+from typing import List, Optional
+
+import numpy as np
+import torch
+import whisper
+
+from src.miniomni3.dataset.TOKENS import (
+    ASSISTANT, AUDIO_BEGIN, KEEP_SILENCE, PAD, TEXT_BEGIN, TEXT_END,
+    HAPPY, SAD, ANGRY, SURPRISE, NORMAL, URGENT,
+)
+from src.miniomni3.model import GPT
+from src.miniomni3.tokenizer import Tokenizer
+
+
 # Encoder-output frames per [AUDIO_BEGIN, PAD*N, ASSISTANT, ...] block.
 AUDIO_TOKENS_PER_CHUNK = 10
+
+
+# 情绪 token -> 颜文字（终端/GitHub 都能正常显示）
+EMOTION_KAOMOJI = {
+    HAPPY:    "(◕‿◕)",
+    SAD:      "(╥﹏╥)",
+    ANGRY:    "(╬ಠ益ಠ)",
+    SURPRISE: "(⊙o⊙)",
+    NORMAL:   "(・_・)",
+    URGENT:   "(°□°;)",
+}
 
 
 # === Sampling ===
@@ -135,6 +142,110 @@ def _advance_one(input_pos, input_pos_maxp1):
     return new_pos, input_pos_maxp1
 
 
+# === Pretty printing helpers ===
+
+class _Pretty:
+    """Tiny renderer for the streaming UI. Auto-disables color on non-TTY."""
+
+    # ANSI codes; emptied below when not a TTY.
+    DIM = "\033[2m"
+    BOLD = "\033[1m"
+    RESET = "\033[0m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    MAGENTA = "\033[35m"
+    GREY = "\033[90m"
+    CLEAR_LINE = "\033[2K\r"
+
+    BAR_WIDTH = 24
+
+    def __init__(self, stream=sys.stdout):
+        self.stream = stream
+        self.use_color = stream.isatty()
+        self.use_cr = stream.isatty()  # only do in-place updates on a real terminal
+        if not self.use_color:
+            for name in ("DIM", "BOLD", "RESET", "CYAN", "GREEN",
+                         "YELLOW", "MAGENTA", "GREY"):
+                setattr(self, name, "")
+            self.CLEAR_LINE = ""
+        # Track whether we're currently sitting on a transient status line
+        # (so the next permanent write knows to clear it first).
+        self._status_active = False
+
+    # --- low-level ---
+    def _write(self, s: str) -> None:
+        self.stream.write(s)
+        self.stream.flush()
+
+    def _clear_status(self) -> None:
+        if self._status_active and self.use_cr:
+            self._write(self.CLEAR_LINE)
+        self._status_active = False
+
+    # --- public ---
+    def header(self, round_idx: int, n_rounds: int, audio_path: str, n_chunks: int) -> None:
+        self._clear_status()
+        name = os.path.basename(audio_path)
+        bar = "━" * 60
+        self._write(
+            f"\n{self.CYAN}{bar}{self.RESET}\n"
+            f"{self.BOLD}{self.CYAN}▶ Round {round_idx}/{n_rounds}{self.RESET}  "
+            f"{self.DIM}{name}{self.RESET}  "
+            f"{self.GREY}[{n_chunks} chunks]{self.RESET}\n"
+            f"{self.CYAN}{bar}{self.RESET}\n"
+        )
+
+    def status(self, chunk_idx: int, n_chunks: int, silent_run: int, replied: int) -> None:
+        """Transient one-line progress; updates in place on a TTY."""
+        if not self.use_cr:
+            return  # don't spam a logfile with thousands of status lines
+        filled = int(self.BAR_WIDTH * chunk_idx / max(n_chunks, 1))
+        bar = (
+            f"{self.GREEN}{'█' * filled}{self.RESET}"
+            f"{self.GREY}{'·' * (self.BAR_WIDTH - filled)}{self.RESET}"
+        )
+        dots = f"{self.DIM}{'·' * min(silent_run, 40)}{self.RESET}" if silent_run else ""
+        replied_tag = (
+            f"  {self.GREEN}✓ {replied} reply{'ies' if replied != 1 else ''}{self.RESET}"
+            if replied else ""
+        )
+        line = (
+            f"{self.CLEAR_LINE}"
+            f"{self.DIM}listening{self.RESET} {bar} "
+            f"{self.BOLD}{chunk_idx:>3}/{n_chunks}{self.RESET}"
+            f"{replied_tag}  {dots}"
+        )
+        self._write(line)
+        self._status_active = True
+
+    def reply_begin(self) -> None:
+        """Promote to a permanent line: clear status, drop to a new line, print prefix."""
+        self._clear_status()
+        self._write(f"  {self.MAGENTA}▸{self.RESET} ")
+
+    def reply_token(self, text: str) -> None:
+        self._write(text)
+
+    def reply_emotion(self, token_id: int) -> None:
+        """Print the emotion kaomoji inline at the start of a reply."""
+        kao = EMOTION_KAOMOJI.get(token_id, f"[emo:{token_id}]")
+        self._write(f"{self.YELLOW}{kao}{self.RESET} ")
+
+    def reply_end(self) -> None:
+        self._write("\n")
+
+    def round_summary(self, replied: int, silent: int, total: int) -> None:
+        self._clear_status()
+        self._write(
+            f"  {self.GREY}└─ {replied} reply chunk(s), "
+            f"{silent} silent, {total} total{self.RESET}\n"
+        )
+
+    def finish(self) -> None:
+        self._clear_status()
+
+
 def streaming_generate(
     model: GPT,
     audio_encoder: torch.nn.Module,
@@ -144,30 +255,49 @@ def streaming_generate(
     rounds: int = 10,
     audio_paths: Optional[List[str]] = None,
     max_returned_tokens: int = 4096,
-    temperature: float = 1.0,
-    top_k: Optional[int] = None,
+    temperature: float = 0,
+    top_k: Optional[int] = 1,
     top_p: float = 1.0,
 ):
     """Stream audio→text. If `audio_paths` is given, run one round per path
     non-interactively (offline); otherwise prompt stdin each round (online)."""
     device = prefix_ids.device
+    ui = _Pretty()
+    ui._write(f"{ui.DIM}device: {device}{ui.RESET}\n")
+
     token = prefix_ids
     input_pos = torch.arange(0, prefix_ids.size(0), device=device, dtype=torch.int64)
     input_pos_maxp1 = _init_input_pos_maxp1(model, prefix_ids.size(0), device)
 
-    turns: List[List[int]] = []  # one inner list per assistant turn, starting at TEXT_BEGIN
+    turns: List[List[int]] = []  # one inner list per assistant turn (across all rounds)
     n_rounds = len(audio_paths) if audio_paths is not None else rounds
 
     for round_idx in range(n_rounds):
         if audio_paths is not None:
             audio_path = audio_paths[round_idx]
-            print(f"Round {round_idx} — audio: {audio_path}")
         else:
-            audio_path = input(f"Round {round_idx} — enter audio path: ").strip()
+            ui._clear_status()
+            audio_path = input(
+                f"{ui.BOLD}Round {round_idx + 1}/{n_rounds}{ui.RESET} — enter audio path: "
+            ).strip()
+
         audio_chunks = encode_audio_chunks(audio_path, audio_encoder, device)
-        print(f"[{len(audio_chunks)} audio chunks]")
+        ui.header(round_idx + 1, n_rounds, audio_path, len(audio_chunks))
+
+        # Per-round counters for the progress line / summary.
+        replied_chunks = 0
+        silent_chunks = 0
+        silent_run = 0  # consecutive silent chunks since the last reply (for the dots)
+
+        # Buffer of decoded ids for the *current* assistant turn — emitted token-by-token.
+        # turn[0] is TEXT_BEGIN. turn[1] is *usually* an emotion tag, but if not we
+        # treat it as regular text.
+        current_turn: List[int] = []
+        text_started = False  # have we opened a reply line yet?
 
         listening, audio_idx = True, -1
+        ui.status(0, len(audio_chunks), silent_run, replied_chunks)
+
         for _ in range(max_returned_tokens - input_pos.numel()):
             if listening:
                 audio_idx += 1
@@ -195,126 +325,55 @@ def streaming_generate(
             if listening:
                 if int_token == TEXT_BEGIN:
                     listening = False
-                    turns.append([int_token])
+                    current_turn = [int_token]
+                    text_started = False
+                    # Don't print yet — wait until we know whether the next token is an emotion.
                 elif int_token == KEEP_SILENCE:
                     turns.append([int_token])
+                    silent_chunks += 1
+                    silent_run += 1
+                    ui.status(audio_idx + 1, len(audio_chunks), silent_run, replied_chunks)
                 else:
                     raise ValueError(f"Unexpected token {int_token} while listening")
             else:
-                turns[-1].append(int_token)
+                current_turn.append(int_token)
+
                 if int_token == TEXT_END:
+                    if text_started:
+                        ui.reply_end()
+                    turns.append(current_turn)
+                    current_turn = []
+                    text_started = False
+                    replied_chunks += 1
+                    silent_run = 0
                     listening = True
+                    ui.status(audio_idx + 1, len(audio_chunks), silent_run, replied_chunks)
+                else:
+                    # Layout: [TEXT_BEGIN, (optional EMOTION), t0, t1, ..., TEXT_END]
+                    # current_turn already has TEXT_BEGIN + this token in it.
+                    n = len(current_turn)
+                    if n == 2:
+                        # First token after TEXT_BEGIN — could be an emotion tag or
+                        # just regular text if the model skipped the emotion.
+                        ui.reply_begin()
+                        text_started = True
+                        if int_token in EMOTION_KAOMOJI:
+                            ui.reply_emotion(int_token)
+                        else:
+                            piece = tokenizer.decode(torch.tensor([int_token]))
+                            if piece:
+                                ui.reply_token(piece)
+                    elif n >= 3:
+                        # Stream this token's surface form immediately.
+                        piece = tokenizer.decode(torch.tensor([int_token]))
+                        if piece:
+                            ui.reply_token(piece)
 
-        # Decode and print this round's assistant turns.
-        # Each turn looks like [TEXT_BEGIN, EMOTION, ...text..., TEXT_END]; strip both ends.
-        # In offline mode (audio_paths supplied) also print silent decisions so the
-        # demo viewer sees the model's "no reply" outcomes explicitly.
-        for piece_idx, turn in enumerate(turns, start=1):
-            if turn[0] == TEXT_BEGIN:
-                decoded = tokenizer.decode(torch.tensor(turn[2:-1]))
-                if decoded:
-                    print(f"\n=== Audio piece {piece_idx} ===\n{decoded}\n")
-            elif audio_paths is not None:
-                print(f"\n=== Audio piece {piece_idx} === (silent — kept listening)\n")
+        # End of this audio file — close any open reply line and print a tiny summary.
+        if not listening and text_started:
+            ui.reply_end()
+            text_started = False
+        ui.round_summary(replied_chunks, silent_chunks, replied_chunks + silent_chunks)
 
+    ui.finish()
     return turns
-
-
-# === Setup ===
-
-def set_seed(seed: int = 1337) -> None:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-
-def load_model(fabric, model_config_dir, trained_checkpoint):
-    config = Config.from_file(Path(model_config_dir) / "model_config.yaml")
-    with fabric.init_module(empty_init=(fabric.world_size > 1)):
-        model = GPT(config)
-    model = fabric.setup(model)
-    load_checkpoint(fabric, model, trained_checkpoint, strict=True)
-    return model
-
-
-def load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device):
-    # Instantiate via the full Omni model and pluck out thinker.audio_tower,
-    # then load the wrapped audio_tower ckpt (proj.* baked in from the trained
-    # audio_adapter.*; see finetune/wrap_audio_tower.py).
-    qwen_omni_ckpt = "/Users/yansc-xzf/Desktop/工作/Mini-Omni3/github/omni3/Mini-Omni3/checkpoints/qwen2_5_omni_config"
-    print(device)
-    cfg = AutoConfig.from_pretrained(qwen_omni_ckpt)
-    encoder = Qwen2_5OmniForConditionalGeneration._from_config(cfg).thinker.audio_tower
-    encoder.load_state_dict(torch.load(audio_tower_ckpt, map_location=device))
-    encoder.to(device).requires_grad_(False).eval()
-    return encoder
-
-
-def resolve_checkpoint_paths(checkpoint_dir: str):
-    """Map a single checkpoint root → (model_config_dir, trained_checkpoint,
-    qwen_omni_ckpt, audio_tower_ckpt). The release layout is:
-
-        <checkpoint_dir>/
-            model_config.yaml + tokenizer.json + ...   ← model_config_dir = root
-            MiniOmni3_LM.pt
-            MiniOmni3_ChunkwisedEncoder.pth
-            qwen_2_5_omni_config/
-    """
-    ckpt = Path(checkpoint_dir)
-    return (
-        str(ckpt),
-        str(ckpt / "MiniOmni3_LM.pt"),
-        str(ckpt / "qwen_2_5_omni_config"),
-        str(ckpt / "MiniOmni3_ChunkwisedEncoder.pth"),
-    )
-
-
-def run_inference(
-    *,
-    checkpoint_dir: str,
-    rounds: int = 10,
-    audio_paths: Optional[List[str]] = None,
-    seed: int = 1337,
-    max_new_tokens: int = 4096,
-    device: str = "cuda:0",
-):
-    """End-to-end: build fabric, load model + audio encoder, run streaming_generate.
-
-    If `audio_paths` is given, runs one round per path non-interactively
-    (offline mode). Otherwise prompts stdin each round (online mode).
-    """
-    if not checkpoint_dir:
-        raise RuntimeError("`checkpoint_dir` is empty — set it before calling run_inference().")
-    model_config_dir, trained_checkpoint, qwen_omni_ckpt, audio_tower_ckpt = \
-        resolve_checkpoint_paths(checkpoint_dir)
-
-    set_seed(seed)
-    fabric = L.Fabric(
-        devices=1, num_nodes=1, strategy="auto",
-        precision=get_default_supported_precision(training=False),
-        loggers="tensorboard",
-    )
-    model = load_model(fabric, model_config_dir, trained_checkpoint)
-    audio_encoder = load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device)
-    tokenizer = Tokenizer(model_config_dir)
-
-    system_ids = tokenizer.encode(SYSTEM_PROMPT).cpu().tolist()
-    prefix_ids = torch.LongTensor(
-        [ONLINE, ENGLISH, SYSTEM, TEXT_BEGIN] + system_ids + [TEXT_END]
-    ).to(model.device)
-
-    with fabric.init_tensor():
-        model.set_kv_cache(batch_size=1)
-    model.eval()
-    try:
-        with torch.inference_mode():
-            return streaming_generate(
-                model, audio_encoder, tokenizer, prefix_ids,
-                rounds=rounds, audio_paths=audio_paths,
-                max_returned_tokens=max_new_tokens,
-            )
-    finally:
-        model.clear_kv_cache()

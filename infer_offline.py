@@ -1,36 +1,75 @@
-import argparse
-from pathlib import Path
+from typing import List, Optional
 
-from src.miniomni3.generate.base import run_inference
+import lightning as L
 import torch
 
-CHECKPOINT_DIR = "/Users/yansc-xzf/Desktop/工作/Mini-Omni3/github/omni3/Mini-Omni3/checkpoints"
-AUDIO_PATH = "/Users/yansc-xzf/Desktop/工作/Mini-Omni3/github/omni3/Mini-Omni3/assets/what_can_you_do.m4a"
+from src.miniomni3.dataset.TOKENS import ENGLISH, ONLINE, SYSTEM, TEXT_BEGIN, TEXT_END
+from src.miniomni3.generate.base import streaming_generate
+from utils import (
+    load_audio_encoder, load_model, resolve_checkpoint_paths, set_seed, get_best_device
+)
+from src.miniomni3.tokenizer import Tokenizer
+from src.miniomni3.utils import get_default_supported_precision
 
 
-
-def get_best_device():
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
+SYSTEM_PROMPT = (
+    "You are a helpful assistant. When there is no user text, if the audio contains a question, "
+    "please answer it. If it is a sound effect, determine based on the sound whether help is needed."
+)
 
 
+def run_inference(
+    *,
+    checkpoint_dir: str,
+    rounds: int = 10,
+    audio_paths: Optional[List[str]] = None,
+    seed: int = 1337,
+    max_new_tokens: int = 4096,
+    device: str = "cuda:0",
+):
+    """End-to-end: build fabric, load model + audio encoder, run streaming_generate.
 
+    If `audio_paths` is given, runs one round per path non-interactively
+    (offline mode). Otherwise prompts stdin each round (online mode).
+    """
+    if not checkpoint_dir:
+        raise RuntimeError("`checkpoint_dir` is empty — set it before calling run_inference().")
+    model_config_dir, trained_checkpoint, qwen_omni_ckpt, audio_tower_ckpt = \
+        resolve_checkpoint_paths(checkpoint_dir)
 
-
-if __name__ == "__main__":
-    p = argparse.ArgumentParser(description="One-shot offline inference.")
-    p.add_argument("--seed", type=int, default=1337)
-    p.add_argument("--max-new-tokens", type=int, default=4096)
-    args = p.parse_args()
-
-    run_inference(
-        checkpoint_dir=str(CHECKPOINT_DIR),
-        audio_paths=[AUDIO_PATH],
-        rounds=1,
-        seed=args.seed,
-        max_new_tokens=args.max_new_tokens,
-        device=get_best_device()
+    set_seed(seed)
+    fabric = L.Fabric(
+        devices=1, num_nodes=1, strategy="auto",
+        precision=get_default_supported_precision(training=False),
+        loggers="tensorboard",
     )
+    model = load_model(fabric, model_config_dir, trained_checkpoint).to(device)
+    audio_encoder = load_audio_encoder(qwen_omni_ckpt, audio_tower_ckpt, device)
+    tokenizer = Tokenizer(model_config_dir)
+
+    system_ids = tokenizer.encode(SYSTEM_PROMPT).cpu().tolist()
+    prefix_ids = torch.LongTensor(
+        [ONLINE, ENGLISH, SYSTEM, TEXT_BEGIN] + system_ids + [TEXT_END]
+    ).to(model.device)
+
+    with fabric.init_tensor():
+        model.set_kv_cache(batch_size=1)
+    model.eval()
+    try:
+        with torch.inference_mode():
+            return streaming_generate(
+                model, audio_encoder, tokenizer, prefix_ids,
+                rounds=rounds, audio_paths=audio_paths,
+                max_returned_tokens=max_new_tokens,
+            )
+    finally:
+        model.clear_kv_cache()
+
+audio_paths = [
+    "path1",
+]
+
+run_inference(checkpoint_dir="./checkpoints", 
+    audio_paths=audio_paths,
+    device=get_best_device(), 
+)

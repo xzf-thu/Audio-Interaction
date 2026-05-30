@@ -281,3 +281,10 @@ def create_finetuning_performance_report(training_time: float, device_type: str)
         lines.append(f"| Peak Memory   : {memory_used:.2f} GB")
     lines.append("| ------------------------------------------------------")
     return "\n".join(lines)
+
+
+
+
+
+
+

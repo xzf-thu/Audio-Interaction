@@ -17,6 +17,7 @@
     --accent-b: #4ea8ff;   /* blue   */
     --accent-c: #b893ff;   /* lilac  */
     --danger:   #ff5c8a;
+    --warn:     #ffb454;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -191,6 +192,28 @@
     border-radius: 6px;
   }
 
+  /* cache-cleared notice: plain white text, top-right corner, no chrome */
+  .cache-notice {
+    position: fixed;
+    top: 36px;
+    right: 48px;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+    z-index: 100;
+    max-width: 50vw;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cache-notice.visible { opacity: 1; }
+
   /* ----- FOOTER ----- */
   footer {
     display: flex;
@@ -269,6 +292,8 @@
     </footer>
   </div>
 
+  <div class="cache-notice" id="cache-notice"></div>
+
 <script>
 /* ============================================================
    CONFIG
@@ -277,14 +302,23 @@ const CONFIG = {
   // VAD
   ENERGY_THRESHOLD: 0.012,   // absolute RMS threshold (0..1). Tune per environment.
   FRAME_MS:         400,     // each frame is exactly 400ms
-  SILENCE_MS:       6000,    // stop after 1.2s of silence
+  SILENCE_MS:       6000,    // stop after 6s of silence
+  // After a triggered frame, keep sending real audio for this many additional
+  // untriggered frames before switching to zero-padding. Gives the model a
+  // chance to "hear" the natural tail of the user's utterance (final consonants,
+  // breath) so it doesn't interrupt before the instruction is complete.
+  TRAILING_REAL_FRAMES: 2,
   SAMPLE_RATE:      16000,   // resample target for backend
+  // UI
+  RESPONSE_HOLD_MS: 5000,    // keep the response panel on screen this long after END_TOKEN
+  CACHE_NOTICE_MS:  3000,    // how long the corner cache-cleared notice stays up
   // Backend
   AUDIO_ENDPOINT:   "/audio",
   AUDIO_END_ENDPOINT: "/audio_end",
   TEXT_STREAM:      "/stream",
   END_TOKEN:        "<|end|>",
   BUSY_TOKEN:       "<|busy|>",
+  CACHE_CLEARED_TOKEN: "<|cache_cleared|>",
 };
 
 /* ============================================================
@@ -304,6 +338,7 @@ const state = {
   pcmBufferSamples: 0,
   lastTriggerTime: 0,        // ms timestamp of last frame whose RMS exceeded threshold
   frameTriggered: false,     // whether current frame had a high-energy sample
+  trailingFramesLeft: 0,     // remaining "tail" frames after a trigger during which we still send real audio
   // text streaming
   sse: null,
   // UI
@@ -312,6 +347,9 @@ const state = {
   dotEl: null,
   labelEl: null,
   vadReadout: null,
+  cacheNoticeEl: null,
+  cacheNoticeTimer: null,
+  responseHideTimer: null,   // timer that hides the response panel after RESPONSE_HOLD_MS
 };
 
 /* ============================================================
@@ -415,6 +453,7 @@ state.responseTextEl = document.getElementById('response-text');
 state.dotEl          = document.getElementById('state-dot');
 state.labelEl        = document.getElementById('state-label');
 state.vadReadout     = document.getElementById('vad-readout');
+state.cacheNoticeEl  = document.getElementById('cache-notice');
 
 function setUiState(s) {
   // s: 'idle' | 'listening' | 'sending' | 'speaking'
@@ -427,6 +466,17 @@ function setUiState(s) {
 function showResponse(show) {
   if (show) state.responseEl.classList.add('visible');
   else      state.responseEl.classList.remove('visible');
+}
+
+function showCacheClearedNotice(reason) {
+  const text = reason ? `cache cleared · ${reason}` : 'cache cleared';
+  state.cacheNoticeEl.textContent = text;
+  state.cacheNoticeEl.classList.add('visible');
+  if (state.cacheNoticeTimer) clearTimeout(state.cacheNoticeTimer);
+  state.cacheNoticeTimer = setTimeout(() => {
+    state.cacheNoticeEl.classList.remove('visible');
+    state.cacheNoticeTimer = null;
+  }, CONFIG.CACHE_NOTICE_MS);
 }
 
 /* ============================================================
@@ -497,6 +547,7 @@ async function startMic() {
   };
 
   state.recording = true;
+  state.trailingFramesLeft = 0;
   setUiState('listening');
 }
 
@@ -527,13 +578,15 @@ function flushFrame(inRate, samplesPerFrameIn) {
 
   // decide: do we send this frame?
   // Rule: start when the FIRST triggered frame arrives, then keep sending every 400ms
-  //       until 1.2s passes with no triggered frame.
+  //       until SILENCE_MS passes with no triggered frame.
   if (triggeredThisFrame) {
     if (!state.sending) {
       state.sending = true;
       setUiState('sending');
     }
     state.lastTriggerTime = now;
+    // Reset the "real audio tail" counter every time we see fresh energy.
+    state.trailingFramesLeft = CONFIG.TRAILING_REAL_FRAMES;
   }
 
   if (state.sending) {
@@ -541,16 +594,25 @@ function flushFrame(inRate, samplesPerFrameIn) {
     if (sinceTrig > CONFIG.SILENCE_MS) {
       // silence elapsed -> stop sending and tell backend the utterance ended.
       state.sending = false;
+      state.trailingFramesLeft = 0;
       setUiState('listening');
       sendAudioEnd();
       return;
     }
-    // Keep cadence: untriggered frames inside an utterance go out as pure silence
-    // so background noise can't bleed into the model between spoken bursts.
+    // Frame routing:
+    //   triggered            -> send real audio
+    //   untriggered + tail>0 -> send real audio, decrement tail counter
+    //   untriggered + tail=0 -> send zero-padding (keeps cadence so the model
+    //                           knows time is passing, but doesn't leak room
+    //                           noise into the model's context)
     if (triggeredThisFrame) {
       sendFrame(frame, inRate);
+    } else if (state.trailingFramesLeft > 0) {
+      state.trailingFramesLeft -= 1;
+      console.log(`[sending] tail frame (${state.trailingFramesLeft} left) -> sending real audio`);
+      sendFrame(frame, inRate);
     } else {
-      console.log('[sending] frame below threshold -> sending silence');
+      console.log('[sending] frame below threshold + tail exhausted -> sending silence');
       sendFrame(new Float32Array(samplesPerFrameIn), inRate);
     }
   }
@@ -616,6 +678,7 @@ function stopMic() {
   state.pcmBuffer = [];
   state.pcmBufferSamples = 0;
   state.frameTriggered = false;
+  state.trailingFramesLeft = 0;
   if (state.processor) { try { state.processor.disconnect(); } catch(_){} state.processor.onaudioprocess = null; state.processor = null; }
   if (state.source)    { try { state.source.disconnect(); } catch(_){} state.source = null; }
   if (state.analyser)  { try { state.analyser.disconnect(); } catch(_){} state.analyser = null; }
@@ -635,8 +698,24 @@ function openTextStream() {
   es.onmessage = (ev) => {
     const chunk = ev.data;
 
+    // Cache-cleared signal from backend (VRAM eviction). Show a small corner
+    // notice; do NOT touch the response panel or its hide timer — let the
+    // currently-displayed reply finish its read-hold window normally.
+    if (chunk.includes(CONFIG.CACHE_CLEARED_TOKEN)) {
+      const reason = chunk.split(CONFIG.CACHE_CLEARED_TOKEN)[1] || '';
+      showCacheClearedNotice(reason.trim());
+      // Re-arm the mic only if it isn't already running.
+      if (!state.recording) {
+        startMic().catch(err => console.error(err));
+      }
+      return;
+    }
+
     // Busy signal from backend: stop mic now, prepare panel.
     if (chunk.includes(CONFIG.BUSY_TOKEN)) {
+      // If the previous response is still being held on screen, cancel its
+      // hide timer — a new turn is starting.
+      if (state.responseHideTimer) { clearTimeout(state.responseHideTimer); state.responseHideTimer = null; }
       stopMic();
       state.responseTextEl.textContent = '';
       showResponse(true);
@@ -647,20 +726,30 @@ function openTextStream() {
     // First text chunk of a new utterance -> enter "speaking" mode (fallback
     // if BUSY_TOKEN was missed for any reason).
     if (!state.responseEl.classList.contains('visible')) {
+      if (state.responseHideTimer) { clearTimeout(state.responseHideTimer); state.responseHideTimer = null; }
       stopMic();
       state.responseTextEl.textContent = '';
       showResponse(true);
       setUiState('speaking');
     }
 
-    // end token?
+    // end token? The model is done speaking — restart the mic IMMEDIATELY so
+    // the user can start talking again, but leave the response panel up for
+    // RESPONSE_HOLD_MS so they have time to read it.
     if (chunk.includes(CONFIG.END_TOKEN)) {
       const before = chunk.split(CONFIG.END_TOKEN)[0];
       if (before) state.responseTextEl.textContent += before;
-      setTimeout(() => {
+
+      // Re-arm the mic right away (no 5s gap).
+      startMic().catch(err => console.error(err));
+
+      // Hide the panel after the read-hold window. Track the timer so a new
+      // BUSY can cancel it.
+      if (state.responseHideTimer) clearTimeout(state.responseHideTimer);
+      state.responseHideTimer = setTimeout(() => {
         showResponse(false);
-        startMic().catch(err => console.error(err));
-      }, 600);
+        state.responseHideTimer = null;
+      }, CONFIG.RESPONSE_HOLD_MS);
       return;
     }
 
