@@ -1,17 +1,25 @@
-# Mini-Omni3: A unified Audio Interaction Model
+# Mini-Omni3: Towards Unified Audio Interaction Model
 
 <p align="center">
   <img src="assets/figures/top.png" alt="Mini-Omni3 Logo" width="100%">
 </p>
 
+Today's Large Audio Language Models (LALMs) are stuck in an offline paradigm: you hand them a complete audio clip, wait, and get a reply. Streaming audio models exist, but each one only handles a single, isolated task. There has never been a general streaming audio language model. We formalize that missing capability as a new concept **the Audio Interaction Model** and build the first one.
+Mini-Omni3 is a unified Audio Interaction Model that:
 
-We introduce **MINI-OMNI3**, the first **always-on Streaming Audio Language Model (SALM)** that follows **every audio task — understanding, transcription, translation, full-spectrum conversation, and proactive intervention — in a single streaming session**, deciding frame by frame via `⟨Silent⟩` / `⟨Speak⟩` control tokens when and how to respond. Trained on **260,000 hours of streaming audio** with our unified **SoundFlow** framework, it stays **competitive with strong offline baselines** — and sometimes beats them. If you like us, please give us a star ✨.
+✅ Runs conventional offline audio tasks (ASR, S2TT, AQA...)
+
+✅ Runs streaming audio tasks in real time (Voice chatting...)
+
+✅ Achieves general streaming audio instruction following on a live stream
+
+✅ Does all of the above inside a single, all-in-one model, and be always-on and proactive
 
 
 <p align="center">
   <a href="https://arxiv.org/abs/2605.XXXXX">Technical Report 📖</a> /
-  <a href="https://huggingface.co/datasets/mini-omni3/SoundFlow-260K">SoundFlow-260K 🤗</a> /
-  <a href="https://huggingface.co/mini-omni3/Mini-Omni3">Mini-Omni3 Weights 🤗</a> /
+  <a href="https://huggingface.co/datasets/mini-omni3/SoundFlow-260K">StreamAudio-2M 🤗</a> /
+  <a href="https://huggingface.co/mini-omni3/Mini-Omni3">Mini-Omni3 Model 🤗</a> /
   <a href="https://github.com/mini-omni3/Streaming-Audio-Bench">Streaming-Audio-Bench 🏆</a>
 </p>
 
@@ -31,12 +39,11 @@ We introduce **MINI-OMNI3**, the first **always-on Streaming Audio Language Mode
 
 ## 🔥 News
 
-- [Coming]: We will release the full SoundFlow data construction pipeline.
-- [Coming]: WebUI for live streaming interaction will be open-sourced.
-- [Coming]: Dataset and benchmark will be reformatted to be clearer.
-- **May 28, 2026**: 🔥 We add Mini-Omni3 low-latency streaming inference with FIFO asynchronous encode/decode.
-- **May 20, 2026**: 🔥 We release **Streaming-Audio-Bench**, a benchmark for always-on SALM evaluation.
-- **May 20, 2026**: 🔥 We release **SoundFlow-260K**.
+- [Coming]: We will release the full dataset and data curation pipeline.
+- [Coming]: The full training configs and pipeline.
+
+
+- **May 20, 2026**: 🔥 We release **StreamAudio-2M**.
 - **May 20, 2026**: 🔥 We release the **Mini-Omni3 Inference and Training Codebase**.
 - **May 19, 2026**: 🔥 **Mini-Omni3** model weights are now available on Hugging Face.
 - **May 19, 2026**: 🔥 We release the **Mini-Omni3 Technical Report**.
@@ -44,7 +51,7 @@ We introduce **MINI-OMNI3**, the first **always-on Streaming Audio Language Mode
 
 ## Contents
 
-* **[Quick Start — play first](#quick-start)**
+* **[Quick Start](#quick-start)**
 * **[Demos](#demos)** 
 * **[SoundFlow: Train your own Audio Interaction Model](#how-it-works)**
 * **[StreamAudio-2M dataset](#datasets)**
@@ -293,7 +300,7 @@ python src/mini_omni3/finetune/full.py --config src/mini_omni3/finetune/config.y
 # python src/mini_omni3/finetune/full.py --config src/mini_omni3/finetune/config.yaml
 ```
 
-## <a id="datasets"></a>StreamAudio-2M: a large-scale stream audio instruction following corpus
+## <a id="datasets"></a> 🎊 StreamAudio-2M: a large-scale stream audio instruction following corpus
 <p align="center">
   <img src="./assets/figures/dataset.png" alt="SoundFlow framework" width="92%">
 </p>
@@ -330,10 +337,15 @@ Each line is one streaming sequence made of multiple turns:
 
 Set `assistant` to `"<no need to response>"` for a turn where the model should stay silent.
 
-
 ## Acknowledgements
 
 We sincerely thank the creators, maintainers, and contributors of the public datasets and resources used in this work. We also thank the broader large audio language model community for laying the groundwork that made streaming audio modeling possible.
+
+In particular, this project builds on the following open-source repositories:
+
+- [Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni) — the audio encoder and language model backbone behind Mini-Omni3.
+- [LitGPT](https://github.com/Lightning-AI/litgpt) — the training framework our finetuning code is built on.
+- [CosyVoice](https://github.com/FunAudioLLM/CosyVoice) — the text-to-speech model used to synthesize speech during data construction.
 
 
 ## <a id="citation"></a>License, Citation & Stars
@@ -354,3 +366,10 @@ This project will be released under the **Apache-2.0 License**. You can do every
 }
 ```
 
+<a href="https://www.star-history.com/?repos=xzf-thu%2FMini-Omni3&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&legend=top-left" />
+ </picture>
+</a>

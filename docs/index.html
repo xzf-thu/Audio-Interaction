@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mini-Omni3: A Unified Audio Interaction Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #fafafa;
+    --bg-table: #fcfcfc;
+    --ink: #1f2328;
+    --ink-soft: #4a5058;
+    --ink-mute: #6b7178;
+    --rule: #e6e8eb;
+    --rule-strong: #d0d4d9;
+    --accent: #0d7c8a;
+    --accent-soft: #e2f4f6;
+    --code-bg: #0f1419;
+    --code-ink: #e6edf3;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* ----------------- Language toggle ----------------- */
+  .lang-toggle {
+    position: fixed; top: 18px; right: 18px; z-index: 100;
+    display: inline-flex; align-items: center;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 2px solid #0f0f10; border-radius: 999px; padding: 3px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06); font-family: 'Inter', system-ui, sans-serif;
+    animation: lang-border-cycle 2s ease-in-out infinite;
+  }
+  @keyframes lang-border-cycle { 0%,100% { border-color:#0f0f10; } 50% { border-color:#ffffff; } }
+  .lang-toggle:hover { animation-play-state: paused; border-color:#0f0f10; }
+  .lang-toggle button {
+    appearance:none; -webkit-appearance:none; border:none; background:transparent;
+    color:#6b7178; font-size:13px; font-weight:600; padding:6px 14px; border-radius:999px;
+    cursor:pointer; letter-spacing:0.01em; transition: background .2s ease, color .2s ease;
+  }
+  .lang-toggle button:hover { color:#1f2328; }
+  .lang-toggle button.active { background:#1f2328; color:#fff; }
+
+  html, body {
+    margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family: 'Crimson Pro', 'Source Serif Pro', Georgia, serif;
+    font-size:18px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+
+  .page { max-width:1180px; margin:0 auto; padding:28px 32px 96px; }
+
+  /* ----------------- Header / Title ----------------- */
+  header.title-block { text-align:center; padding:8px 0 4px; }
+
+  h1.paper-title {
+    font-family:'Crimson Pro', Georgia, serif; font-weight:600; line-height:1.22;
+    margin:0 auto; max-width:1000px; color:var(--ink); letter-spacing:-0.01em;
+  }
+  .paper-name {
+    font-weight:700; letter-spacing:-0.02em;
+    background: linear-gradient(90deg,#0ea5b7 0%,#2563eb 20%,#7c3aed 40%,#06b6d4 60%,#4f46e5 80%,#0ea5b7 100%);
+    background-size:300% 100%; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    animation: paper-name-gradient 6s linear infinite;
+  }
+  @keyframes paper-name-gradient { 0% { background-position:0% 50%; } 100% { background-position:300% 50%; } }
+  .paper-fulltitle {
+    display:block; font-family:'Crimson Pro', Georgia, serif; font-weight:600;
+    font-size:clamp(24px,3vw,38px); line-height:1.2; letter-spacing:-0.015em;
+    color:var(--ink); max-width:1000px; margin:0 auto; padding:4px 8px;
+  }
+  .title-rule { display:block; margin:4px auto 12px; width:min(760px,86%); background:var(--ink); border-radius:1px; }
+  .title-rule-top { height:3px; margin-top:2px; margin-bottom:14px; }
+  .title-rule-bottom { height:1px; background:var(--rule-strong); margin-top:14px; margin-bottom:2px; }
+
+  .authors {
+    text-align:center; margin-top:16px; font-family:'Crimson Pro', Georgia, serif;
+    font-size:19px; color:var(--ink); line-height:1.6; max-width:920px; margin-left:auto; margin-right:auto;
+  }
+  .authors sup { font-size:11px; color:var(--ink-mute); margin-left:1px; }
+  .affiliations { text-align:center; margin-top:6px; font-size:16px; color:var(--ink-mute); font-style:italic; line-height:1.4; }
+  .affiliations .aff-num { font-style:normal; font-size:11px; vertical-align:super; margin-right:2px; color:var(--ink-mute); }
+
+  /* ----------------- Hero (top.png) ----------------- */
+  .hero { margin:26px auto 0; text-align:center; }
+  .hero img { display:block; margin:0 auto; width:78%; max-width:880px; height:auto; border-radius:12px; }
+  .hero .hero-fallback {
+    margin:0 auto; width:78%; max-width:880px; aspect-ratio:16/6; border-radius:12px; display:none;
+    align-items:center; justify-content:center; background:linear-gradient(135deg,#e7f3f4 0%,#eef0f4 100%);
+    color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:14px; letter-spacing:0.06em;
+  }
+
+  /* ----------------- Abstract ----------------- */
+  .paper-abstract {
+    display:block; margin:26px auto 0; max-width:900px;
+    font-family:'Crimson Pro', Georgia, serif; font-size:clamp(16px,1.2vw,18px); font-weight:400;
+    line-height:1.62; color:var(--ink-soft); text-align:justify; text-justify:inter-word; padding:0 6px;
+  }
+  .paper-abstract strong { color:var(--ink); font-weight:700; }
+
+  /* ----------------- Link buttons ----------------- */
+  .link-row { margin-top:22px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; font-family:'Inter', system-ui, sans-serif; }
+  .pill {
+    display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
+    font-size:15px; font-weight:600; text-decoration:none; line-height:1; color:#fff;
+    transition: transform .15s ease, filter .15s ease, box-shadow .15s ease; box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  }
+  .pill:hover { transform:translateY(-1px); filter:brightness(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.12); }
+  .pill svg { width:16px; height:16px; flex-shrink:0; }
+  .pill.dark { background:#2b2f36; }
+  .pill.black { background:#0f0f10; }
+  .pill.wechat { background:#18c964; }
+  .pill.try { background:#0d7c8a; }
+
+  /* mission line */
+  .mission-line {
+    margin:18px auto 0; max-width:760px; text-align:center;
+    font-family:'Crimson Pro', Georgia, serif; font-style:italic; font-weight:500;
+    font-size:clamp(17px,1.5vw,20px); color:var(--ink-soft); line-height:1.45; padding:0 8px;
+  }
+  .mission-line strong { color:var(--accent); font-style:normal; font-weight:700; }
+
+  .wechat-modal { position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,0.45); }
+  .wechat-modal.is-open { display:flex; }
+  .wechat-card { position:relative; max-width:min(420px,92vw); width:100%; padding:22px; border-radius:20px; background:#0d7c8a; box-shadow:0 24px 70px rgba(15,23,42,0.35); }
+  .wechat-card img { display:block; width:100%; height:auto; border-radius:14px; background:#fff; }
+  .wechat-card .qr-fallback { aspect-ratio:1/1; border-radius:14px; background:#fff; color:#6b7178; display:flex; align-items:center; justify-content:center; text-align:center; font-family:'JetBrains Mono', monospace; font-size:13px; padding:24px; line-height:1.5; }
+  .wechat-close { position:absolute; top:-12px; right:-12px; width:32px; height:32px; border:none; border-radius:999px; background:#fff; color:#1f2328; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
+
+  /* ----------------- YouTube video ----------------- */
+  .video-section { margin-top:44px; text-align:center; }
+  .video-label {
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--ink-mute); margin:0 0 14px;
+  }
+  .video-wrap { max-width:860px; margin:0 auto; }
+  .video-frame {
+    position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
+    border:1px solid var(--rule); box-shadow:0 4px 24px rgba(0,0,0,0.10); background:#000;
+  }
+  .video-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+  /* ----------------- Section heading ----------------- */
+  section.block { margin-top:84px; }
+  .section-head { text-align:center; margin-bottom:28px; }
+  .section-head h2 {
+    font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(26px,3vw,36px);
+    margin:0 0 10px; letter-spacing:-0.01em; color:var(--ink);
+  }
+  .section-head p { margin:0 auto; max-width:840px; font-size:17px; color:var(--ink-soft); line-height:1.55; }
+
+  /* ----------------- Decision badges ----------------- */
+  .decision-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:18px auto 0; font-family:'JetBrains Mono', monospace; }
+  .dec-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px; font-size:13.5px; font-weight:600; letter-spacing:0.02em; }
+  .dec-badge.silent { background:#eef1f4; color:#5b636b; border:1px solid var(--rule-strong); }
+  .dec-badge.speak { background:var(--accent-soft); color:var(--accent); border:1px solid #9fd8df; }
+  .dec-badge .mult { font-family:'Crimson Pro', Georgia, serif; font-size:18px; font-weight:700; }
+
+  /* ----------------- Samples comparison table ----------------- */
+  .table-wrap { margin-top:8px; border:1px solid var(--rule); border-radius:10px; background:var(--bg-table); overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
+  .table-scroll { overflow-x:auto; }
+  table.compare { width:100%; border-collapse:collapse; font-family:'Inter', system-ui, sans-serif; font-size:14px; min-width:1040px; }
+  table.compare thead th {
+    font-weight:600; color:var(--ink); padding:16px 14px 12px; text-align:center;
+    border-bottom:1px solid var(--rule-strong); background:#fff; font-size:14px; letter-spacing:0.01em; vertical-align:top;
+  }
+  table.compare thead th .vendor { display:block; margin-top:4px; font-size:11px; font-weight:500; font-style:italic; color:var(--ink-mute); font-family:'Crimson Pro', Georgia, serif; }
+  table.compare thead th .vendor.ours { color:#0d7c8a; font-weight:600; font-style:normal; }
+  table.compare tbody td { padding:16px 14px; vertical-align:top; border-bottom:1px solid var(--rule); text-align:left; color:var(--ink-soft); line-height:1.5; font-size:13.5px; }
+  table.compare tbody tr:last-child td { border-bottom:none; }
+
+  .col-clip { width:18%; }
+  .col-ours { width:34%; }
+  .col-other { width:24%; }
+
+  .clip-cell { background:var(--bg-soft); text-align:center; }
+  .clip-cell audio { display:block; width:100%; max-width:190px; height:34px; margin:0 auto 12px; outline:none; }
+  .clip-cell .clip-name { display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-mute); margin-bottom:8px; letter-spacing:0.02em; }
+  .clip-cell .clip-scene { display:inline-block; padding:6px 11px; background:var(--accent-soft); color:var(--accent); border-radius:999px; font-weight:600; font-size:12px; line-height:1.3; }
+
+  /* Ours stream terminal */
+  table.compare thead th.ours-col, table.compare tbody td.ours-col {
+    background: linear-gradient(180deg, rgba(191,230,234,0.30) 0%, rgba(219,244,246,0.50) 50%, rgba(191,230,234,0.30) 100%);
+  }
+  table.compare thead th.ours-col { background: linear-gradient(180deg, rgba(191,230,234,0.55) 0%, rgba(219,244,246,0.7) 100%); }
+  table.compare thead th.ours-col .model-name { color:#0d7c8a; font-weight:700; }
+
+  .stream {
+    margin:0; background:var(--code-bg); color:var(--code-ink); border-radius:10px; padding:14px 16px;
+    font-family:'JetBrains Mono', ui-monospace, monospace; font-size:12.5px; line-height:1.7; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .stream .sil { color:#6b7686; }
+  .stream .pc { color:#5fb3c4; }
+  .stream .out { color:#e6edf3; }
+
+  .other-out .stat { display:inline-flex; align-items:center; gap:5px; margin-bottom:6px; font-weight:600; font-size:12px; letter-spacing:0.02em; }
+  .other-out .stat.warn { color:#b45309; }
+  .other-out .stat.bad { color:#b91c1c; }
+
+  /* ----------------- Big figure / dataset ----------------- */
+  .section-head .subhead {
+    display:block; margin-top:14px; font-family:'Crimson Pro', Georgia, serif;
+    font-size:clamp(19px,1.8vw,22px); font-style:italic; font-weight:500; color:var(--ink-soft); letter-spacing:-0.005em;
+  }
+  .subsection { margin-top:52px; }
+  .subsection-title {
+    font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(22px,2.2vw,28px);
+    letter-spacing:-0.01em; color:var(--ink); margin:0 0 28px; display:flex; align-items:center; gap:22px; width:100%;
+  }
+  .subsection-title::before, .subsection-title::after { content:""; flex:1 1 auto; height:1px; background:var(--rule-strong); }
+  .subsection-title > .title-text { flex:0 0 auto; display:inline-flex; align-items:baseline; gap:12px; white-space:nowrap; }
+  .subsection-title .accent {
+    font-family:'JetBrains Mono', ui-monospace, monospace; font-weight:500; font-size:0.74em; color:var(--accent);
+    background:var(--accent-soft); padding:3px 10px; border-radius:6px; margin-left:6px; vertical-align:0.08em;
+  }
+
+  .big-figure { margin:0; width:100%; border:1px solid var(--rule); border-radius:14px; overflow:hidden; background:var(--bg-soft); box-shadow:0 2px 14px rgba(0,0,0,0.04); }
+  .big-figure img { display:block; width:100%; height:auto; }
+  .figure-placeholder { aspect-ratio:16/7; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f7f8fa 0%,#eef0f4 100%); color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; }
+  .figure-caption { margin:22px 0 0; width:100%; font-size:17px; line-height:1.65; color:var(--ink-soft); text-align:justify; }
+  .figure-caption .lead { font-family:'Crimson Pro', Georgia, serif; font-weight:600; color:var(--ink); }
+  .figure-caption strong { color:var(--ink); font-weight:600; }
+  .figure-caption em { font-style:italic; color:var(--ink); }
+  .figure-caption code { font-family:'JetBrains Mono', monospace; font-size:0.82em; background:var(--accent-soft); color:var(--accent); padding:1px 6px; border-radius:5px; }
+
+  .stat-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin:24px 0 0; width:100%; font-family:'Inter', system-ui, sans-serif; }
+  .stat-pill { display:inline-flex; flex-direction:column; align-items:center; padding:12px 22px; border:1px solid var(--rule); border-radius:10px; background:#fff; min-width:130px; }
+  .stat-pill .value { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:26px; color:var(--accent); line-height:1.1; letter-spacing:-0.01em; }
+  .stat-pill .label { margin-top:4px; font-size:12px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.08em; font-weight:500; }
+
+  /* ----------------- Results highlight cards ----------------- */
+  .result-cards { display:flex; flex-wrap:wrap; gap:16px; margin:0 auto 28px; max-width:980px; }
+  .result-card { flex:1 1 240px; border:1px solid var(--rule); border-radius:14px; padding:22px 22px 20px; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.03); }
+  .result-card .rc-tag { font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); }
+  .result-card .rc-title { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:21px; color:var(--ink); margin:8px 0 6px; line-height:1.2; }
+  .result-card.best .rc-title { color:var(--accent); }
+  .result-card .rc-body { font-size:14.5px; color:var(--ink-soft); line-height:1.55; font-family:'Inter', system-ui, sans-serif; }
+
+  /* ----------------- Responsive ----------------- */
+  @media (max-width:720px) {
+    .page { padding:20px 18px 64px; }
+    h1.paper-title .paper-fulltitle { font-size:24px; }
+    .authors { font-size:16px; } .affiliations { font-size:14px; }
+    .pill { font-size:14px; padding:9px 14px; }
+    .paper-abstract { font-size:15px; text-align:left; }
+    .hero img, .hero .hero-fallback { width:96%; }
+    .figure-caption { font-size:16px; text-align:left; }
+    .stat-pill { min-width:104px; padding:10px 16px; } .stat-pill .value { font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LANGUAGE TOGGLE ===================== -->
+<div class="lang-toggle" id="langToggle">
+  <button data-lang="en" class="active">EN</button>
+  <button data-lang="zh">中文</button>
+</div>
+
+<div class="page">
+
+  <!-- ===================== TITLE / AUTHORS / AFFILIATIONS ===================== -->
+  <header class="title-block">
+    <h1 class="paper-title">
+      <span class="title-rule title-rule-top"></span>
+      <span class="paper-fulltitle" data-i18n="paperTitle">
+        <span class="paper-name">Mini-Omni3:</span> Towards Unified Audio Interaction Models<br/>
+        that Continuously Perceive, Decide and Respond
+      </span>
+      <span class="title-rule title-rule-bottom"></span>
+    </h1>
+
+    <p class="authors" data-i18n="authors">
+      <span class="name">Zhifei Xie</span><sup>1*</sup>,
+      <span class="name">Zihang Liu</span><sup>2*</sup>,
+      <span class="name">Ze An</span><sup>2</sup>,
+      <span class="name">Ziyang Ma</span><sup>1</sup>,
+      <span class="name">Xiaobin Hu</span><sup>2</sup><br/>
+      <span class="name">Mingbao Lin</span><sup>2&dagger;</sup>,
+      <span class="name">Deheng Ye</span><sup>1&dagger;</sup>,
+      <span class="name">Shuicheng Yan</span><sup>2&dagger;</sup>,
+      <span class="name">Chunyan Miao</span><sup>1&dagger;</sup>
+    </p>
+    <p class="affiliations" data-i18n="affiliations">
+      <span class="aff-num">1</span>NTU &nbsp;&nbsp; <span class="aff-num">2</span>NUS
+    </p>
+
+    <!-- ===================== HERO (top.png) ===================== -->
+    <div class="hero">
+      <img src="../assets/figures/top.png" alt="Mini-Omni3 teaser"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <div class="hero-fallback">../assets/figures/top.png</div>
+    </div>
+
+    <!-- ===================== ABSTRACT ===================== -->
+    <p class="paper-abstract" data-i18n="paperAbstract">Today&rsquo;s Large Audio Language Models are stuck in an <strong>offline paradigm</strong>: you hand them a finished clip and wait for one reply. Streaming models exist, but each only handles a single, isolated task. We formalize the missing capability as a new concept, the <strong>Audio Interaction Model</strong>, and build the first one. <strong>Mini-Omni3</strong> is a unified, always-on model that runs conventional <strong>offline tasks (ASR, S2TT)</strong>, runs <strong>streaming tasks in real time</strong>, and achieves <strong>general streaming audio instruction following on a live stream</strong>, all inside a <strong>single all-in-one model</strong> that keeps listening and decides for itself when to speak.</p>
+
+    <!-- ===================== LINK BUTTONS (5) ===================== -->
+    <div class="link-row">
+      <a href="https://arxiv.org/abs/2605.XXXXX" class="pill dark" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="btnReport">Technical Report</span>
+      </a>
+      <a href="https://github.com/mini-omni3/Mini-Omni3" class="pill dark" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.67 5.56.67 11.83c0 5.02 3.25 9.27 7.76 10.77.57.1.78-.25.78-.55v-2.13c-3.16.69-3.83-1.36-3.83-1.36-.52-1.31-1.27-1.66-1.27-1.66-1.03-.7.08-.69.08-.69 1.14.08 1.74 1.17 1.74 1.17 1.01 1.74 2.66 1.24 3.31.95.1-.74.4-1.24.72-1.53-2.52-.29-5.17-1.26-5.17-5.6 0-1.24.44-2.25 1.17-3.04-.12-.29-.51-1.44.11-2.99 0 0 .95-.3 3.12 1.16.91-.25 1.88-.38 2.85-.39.97.01 1.94.14 2.85.39 2.17-1.46 3.12-1.16 3.12-1.16.62 1.55.23 2.7.11 2.99.73.79 1.17 1.8 1.17 3.04 0 4.35-2.66 5.31-5.19 5.59.41.35.77 1.04.77 2.1v3.11c0 .3.21.66.79.55 4.5-1.5 7.75-5.75 7.75-10.77C23.33 5.56 18.27.5 12 .5z"/></svg>
+        Code
+      </a>
+      <a href="../assets/wechat.jpg" class="pill wechat" id="wechatLink">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.1 3.58 2.83 4.68L4 17l2.75-1.4c.85.23 1.76.4 2.75.4.35 0 .7-.02 1.04-.05A6.06 6.06 0 0 1 10 14c0-3.31 3.36-6 7.5-6 .19 0 .37.01.56.02C17.39 5.71 13.87 4 9.5 4zM7 8.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm5 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM17.5 9C13.91 9 11 11.24 11 14s2.91 5 6.5 5c.83 0 1.6-.13 2.31-.34L22 20l-.7-2.1c.99-.91 1.7-2.11 1.7-3.4 0-2.76-2.91-5.5-5.5-5.5zm-2.5 4a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm5 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z"/></svg>
+        WeChat
+      </a>
+      <a href="https://x.com/" class="pill black" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X
+      </a>
+      <a href="https://github.com/mini-omni3/Mini-Omni3" class="pill try" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span data-i18n="btnTry">Try Mini-Omni3</span>
+      </a>
+    </div>
+
+    <!-- mission line under the buttons -->
+    <p class="mission-line" data-i18n="missionLine">The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.</p>
+
+    <div class="wechat-modal" id="wechatModal" aria-hidden="true">
+      <div class="wechat-card" role="dialog" aria-modal="true" aria-label="WeChat QR code">
+        <button class="wechat-close" id="wechatClose" type="button" aria-label="Close">&times;</button>
+        <img src="../assets/wechat.jpg" alt="WeChat QR code"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="qr-fallback" style="display:none;">../assets/wechat.jpg<br/>Scan to join the WeChat group</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== YOUTUBE PROMO VIDEO ===================== -->
+  <section class="video-section">
+    <p class="video-label" data-i18n="videoLabel">Watch Mini-Omni3 listen, decide and speak, live</p>
+    <div class="video-wrap">
+      <div class="video-frame">
+        <iframe src="https://www.youtube.com/embed/r1S4xiUBg9s" title="Mini-Omni3 running live"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SAMPLES ===================== -->
+  <section class="block">
+    <div class="section-head">
+      <h2 data-i18n="samplesH2">Live on One Stream: Decide, then Speak</h2>
+      <p data-i18n="samplesIntro">On a single continuous stream, Mini-Omni3 judges every chunk and chooses whether to stay silent or speak. Across the two clips below it spoke only when an event warranted it, and stayed silent the rest of the time.</p>
+      <div class="decision-row">
+        <span class="dec-badge silent" data-i18n="silentBadge">&#10216;Silent&#10217; <span class="mult">&times; 18</span></span>
+        <span class="dec-badge speak" data-i18n="speakBadge">&#10216;Speak&#10217; <span class="mult">&times; 7</span></span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th class="col-clip" data-i18n="thClip">Clip</th>
+              <th class="col-ours ours-col"><span class="model-name">Mini-Omni3</span><span class="vendor ours">[Ours]</span></th>
+              <th class="col-other"><span class="model-name">gpt-audio</span><span class="vendor">by OpenAI</span></th>
+              <th class="col-other"><span class="model-name">gemini-omni</span><span class="vendor">by Google</span></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- Sample 1: count -->
+            <tr>
+              <td class="clip-cell">
+                <span class="clip-name">sample_count.wav</span>
+                <audio controls preload="none"><source src="../assets/audio/sample_count.wav" type="audio/wav" /></audio>
+                <span class="clip-scene" data-i18n="s1Scene">Counting a repeating sound, live</span>
+              </td>
+              <td class="ours-col">
+<pre class="stream"><span class="sil">&#10216;Silent&#10217; &#10216;Silent&#10217; &#10216;Silent&#10217; ...</span>
+<span class="pc">=== Audio piece 15 ===</span>
+<span class="out">once!</span>
+<span class="pc">=== Audio piece 20 ===</span>
+<span class="out">twice!</span>
+<span class="pc">=== Audio piece 25 ===</span>
+<span class="out">three times!</span>
+<span class="pc">=== Audio piece 30 ===</span>
+<span class="out">four times!</span>
+<span class="pc">=== Audio piece 35 ===</span>
+<span class="out">five times!</span></pre>
+              </td>
+              <td class="other-out"><span class="stat bad">&#10060; Record then infer</span><br/><span data-i18n="s1Gpt">Waits for the whole clip, then returns one summary. Never produces a running count as each event lands.</span></td>
+              <td class="other-out"><span class="stat warn">&#9888; Buffered window</span><br/><span data-i18n="s1Gemini">Buffers a fixed window first, so it lags behind the sound and cannot emit a live tally.</span></td>
+            </tr>
+
+            <!-- Sample 2: music -->
+            <tr>
+              <td class="clip-cell">
+                <span class="clip-name">sample_music.wav</span>
+                <audio controls preload="none"><source src="../assets/audio/sample_music.wav" type="audio/wav" /></audio>
+                <span class="clip-scene" data-i18n="s2Scene">A cough, then background music</span>
+              </td>
+              <td class="ours-col">
+<pre class="stream"><span class="sil">&#10216;Silent&#10217; &#10216;Silent&#10217; ...</span>
+<span class="pc">=== Audio piece 7 ===</span>
+<span class="out">It sounds like you're coughing; please take care and drink some water.</span>
+<span class="pc">=== Audio piece 37 ===</span>
+<span class="out">The style of the music clip is likely jazz, characterized by its instrumental focus on improvisation and complex harmonies.</span></pre>
+              </td>
+              <td class="other-out"><span class="stat warn">&#9888; Ignores non-speech</span><br/><span data-i18n="s2Gpt">Treats the music as noise and stays silent on the cough unless it is explicitly asked.</span></td>
+              <td class="other-out"><span class="stat warn">&#9888; Cannot fuse events</span><br/><span data-i18n="s2Gemini">Can identify the music alone, but misses the cough and cannot connect the two events.</span></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SOUNDFLOW ===================== -->
+  <section class="block">
+    <div class="section-head">
+      <h2 data-i18n="sfH2">SoundFlow: training models with an always-on perceive-decide-respond loop</h2>
+    </div>
+
+    <figure class="big-figure">
+      <img src="../assets/figures/soundflow.png" alt="SoundFlow framework"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <div class="figure-placeholder" style="display:none;">[ ../assets/figures/soundflow.png ]</div>
+    </figure>
+
+    <p class="figure-caption" data-i18n="sfCaption">
+      The real world never pauses to hand over a finished clip, so an interaction model has to keep listening and
+      decide for itself, instant by instant, whether this moment deserves a reply. That moves audio modeling
+      <strong>from answering finished clips to running a continuous loop</strong>, and
+      <strong>from a stack of single-task models to one model</strong> where recognition, translation and dialogue
+      are all instructions inside the same always-on stream. <span class="lead">SoundFlow</span> covers the whole pipeline:
+      stitching short clips into long interactions for data, <strong>chunk-level decision training</strong> with history
+      review and comprehension-aware silence, and <strong>asynchronous FIFO inference</strong> that cuts first-frame
+      latency by <em>4.5&times;</em>.
+    </p>
+  </section>
+
+  <!-- ===================== STREAMAUDIO-2M ===================== -->
+  <section class="block">
+    <div class="section-head">
+      <h2 data-i18n="dsH2">StreamAudio-2M</h2>
+      <span class="subhead" data-i18n="dsSub">A large-scale streaming instruction-following corpus</span>
+    </div>
+
+    <figure class="big-figure">
+      <img src="../assets/figures/dataset.png" alt="StreamAudio-2M dataset composition"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <div class="figure-placeholder" style="display:none;">[ ../assets/figures/dataset.png ]</div>
+    </figure>
+
+    <div class="stat-row">
+      <div class="stat-pill"><span class="value">2.6M</span><span class="label" data-i18n="stItems">items</span></div>
+      <div class="stat-pill"><span class="value">7.4M</span><span class="label" data-i18n="stRounds">rounds</span></div>
+      <div class="stat-pill"><span class="value">66.7K</span><span class="label" data-i18n="stHours">hours</span></div>
+      <div class="stat-pill"><span class="value">7</span><span class="label" data-i18n="stCap">capabilities</span></div>
+    </div>
+
+    <p class="figure-caption" data-i18n="dsCaption">
+      <span class="lead">StreamAudio-2M</span> covers <strong>seven capabilities</strong>: <em>audio understanding,
+      real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by
+      collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more),
+      synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with
+      environmental noise and <strong>token-level annotation</strong>.
+    </p>
+  </section>
+
+  <!-- ===================== RESULTS ===================== -->
+  <section class="block">
+    <div class="section-head">
+      <h2 data-i18n="resH2">Results</h2>
+      <p data-i18n="resIntro">Mini-Omni3 keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.</p>
+    </div>
+
+    <div class="result-cards">
+      <div class="result-card">
+        <span class="rc-tag" data-i18n="rcTag1">Foundation</span>
+        <div class="rc-title" data-i18n="rcTitle1">Basic ability preserved</div>
+        <div class="rc-body" data-i18n="rcBody1">Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.</div>
+      </div>
+      <div class="result-card">
+        <span class="rc-tag" data-i18n="rcTag2">Speech input</span>
+        <div class="rc-title" data-i18n="rcTitle2">Markedly stronger</div>
+        <div class="rc-body" data-i18n="rcBody2">On speech-driven tasks the model is clearly stronger, tracking and responding to live speech as it arrives.</div>
+      </div>
+      <div class="result-card best">
+        <span class="rc-tag" data-i18n="rcTag3">Proactive</span>
+        <div class="rc-title" data-i18n="rcTitle3">Best-in-class intervention</div>
+        <div class="rc-body" data-i18n="rcBody3">The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.</div>
+      </div>
+    </div>
+
+    <figure class="big-figure">
+      <img src="../assets/figures/results.png" alt="Mini-Omni3 results"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <div class="figure-placeholder" style="display:none;">[ ../assets/figures/results.png ]</div>
+    </figure>
+  </section>
+
+</div><!-- /.page -->
+
+<script>
+  // ---------- WeChat modal ----------
+  (function() {
+    var link = document.getElementById('wechatLink');
+    var modal = document.getElementById('wechatModal');
+    var close = document.getElementById('wechatClose');
+    function open(e) { if (e) e.preventDefault(); if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); } }
+    function shut() { if (modal) { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); } }
+    if (link) link.addEventListener('click', open);
+    if (close) close.addEventListener('click', shut);
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) shut(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') shut(); });
+  })();
+</script>
+
+<script>
+  // ---------- i18n: EN / 中文 ----------
+  (function() {
+    var dict = {
+      en: {
+        paperTitle: '<span class="paper-name">Mini-Omni3:</span> Towards Unified Audio Interaction Models<br/>that Continuously Perceive, Decide and Respond',
+        authors: '<span class="name">Zhifei Xie</span><sup>1*</sup>, <span class="name">Zihang Liu</span><sup>2*</sup>, <span class="name">Ze An</span><sup>2</sup>, <span class="name">Ziyang Ma</span><sup>1</sup>, <span class="name">Xiaobin Hu</span><sup>2</sup><br/><span class="name">Mingbao Lin</span><sup>2&dagger;</sup>, <span class="name">Deheng Ye</span><sup>1&dagger;</sup>, <span class="name">Shuicheng Yan</span><sup>2&dagger;</sup>, <span class="name">Chunyan Miao</span><sup>1&dagger;</sup>',
+        affiliations: '<span class="aff-num">1</span>NTU &nbsp;&nbsp; <span class="aff-num">2</span>NUS',
+        paperAbstract: 'Today&rsquo;s Large Audio Language Models are stuck in an <strong>offline paradigm</strong>: you hand them a finished clip and wait for one reply. Streaming models exist, but each only handles a single, isolated task. We formalize the missing capability as a new concept, the <strong>Audio Interaction Model</strong>, and build the first one. <strong>Mini-Omni3</strong> is a unified, always-on model that runs conventional <strong>offline tasks (ASR, S2TT)</strong>, runs <strong>streaming tasks in real time</strong>, and achieves <strong>general streaming audio instruction following on a live stream</strong>, all inside a <strong>single all-in-one model</strong> that keeps listening and decides for itself when to speak.',
+        btnReport: 'Technical Report', btnTry: 'Try Mini-Omni3',
+        missionLine: 'The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.',
+        videoLabel: 'Watch Mini-Omni3 listen, decide and speak, live',
+
+        samplesH2: 'Live on One Stream: Decide, then Speak',
+        samplesIntro: 'On a single continuous stream, Mini-Omni3 judges every chunk and chooses whether to stay silent or speak. Across the two clips below it spoke only when an event warranted it, and stayed silent the rest of the time.',
+        silentBadge: '&#10216;Silent&#10217; <span class="mult">&times; 18</span>',
+        speakBadge: '&#10216;Speak&#10217; <span class="mult">&times; 7</span>',
+        thClip: 'Clip',
+        s1Scene: 'Counting a repeating sound, live',
+        s1Gpt: 'Waits for the whole clip, then returns one summary. Never produces a running count as each event lands.',
+        s1Gemini: 'Buffers a fixed window first, so it lags behind the sound and cannot emit a live tally.',
+        s2Scene: 'A cough, then background music',
+        s2Gpt: 'Treats the music as noise and stays silent on the cough unless it is explicitly asked.',
+        s2Gemini: 'Can identify the music alone, but misses the cough and cannot connect the two events.',
+
+        sfH2: 'SoundFlow: training models with an always-on perceive-decide-respond loop',
+        sfCaption: 'The real world never pauses to hand over a finished clip, so an interaction model has to keep listening and decide for itself, instant by instant, whether this moment deserves a reply. That moves audio modeling <strong>from answering finished clips to running a continuous loop</strong>, and <strong>from a stack of single-task models to one model</strong> where recognition, translation and dialogue are all instructions inside the same always-on stream. <span class="lead">SoundFlow</span> covers the whole pipeline: stitching short clips into long interactions for data, <strong>chunk-level decision training</strong> with history review and comprehension-aware silence, and <strong>asynchronous FIFO inference</strong> that cuts first-frame latency by <em>4.5&times;</em>.',
+
+        dsH2: 'StreamAudio-2M',
+        dsSub: 'A large-scale streaming instruction-following corpus',
+        stItems: 'items', stRounds: 'rounds', stHours: 'hours', stCap: 'capabilities',
+        dsCaption: '<span class="lead">StreamAudio-2M</span> covers <strong>seven capabilities</strong>: <em>audio understanding, real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more), synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with environmental noise and <strong>token-level annotation</strong>.',
+
+        resH2: 'Results',
+        resIntro: 'Mini-Omni3 keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.',
+        rcTag1: 'Foundation', rcTitle1: 'Basic ability preserved', rcBody1: 'Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.',
+        rcTag2: 'Speech input', rcTitle2: 'Markedly stronger', rcBody2: 'On speech-driven tasks the model is clearly stronger, tracking and responding to live speech as it arrives.',
+        rcTag3: 'Proactive', rcTitle3: 'Best-in-class intervention', rcBody3: 'The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.'
+      },
+      zh: {
+        paperTitle: '<span class="paper-name">Mini-Omni3：</span> 迈向统一的 Audio Interaction Model<br/>持续地感知、决策与响应',
+        authors: '<span class="name">谢知非</span><sup>1*</sup>，<span class="name">刘子航</span><sup>2*</sup>，<span class="name">安泽</span><sup>2</sup>，<span class="name">马子阳</span><sup>1</sup>，<span class="name">胡晓彬</span><sup>2</sup><br/><span class="name">林明宝</span><sup>2&dagger;</sup>，<span class="name">叶德珩</span><sup>1&dagger;</sup>，<span class="name">颜水成</span><sup>2&dagger;</sup>，<span class="name">缪春燕</span><sup>1&dagger;</sup>',
+        affiliations: '<span class="aff-num">1</span>南洋理工大学（NTU） &nbsp;&nbsp; <span class="aff-num">2</span>新加坡国立大学（NUS）',
+        paperAbstract: '当今的大型音频语言模型仍停留在<strong>离线范式</strong>：你递给它一段完整音频，然后等待一次回复。流式模型虽然存在，但每个都只能处理单一、孤立的任务。我们将这一缺失的能力形式化为一个新概念，即 <strong>Audio Interaction Model</strong>，并构建了第一个这样的模型。<strong>Mini-Omni3</strong> 是一个统一、常驻的模型，既能运行传统的<strong>离线任务（ASR、S2TT）</strong>，又能<strong>实时运行流式任务</strong>，并在<strong>实时音频流上实现通用的流式音频指令跟随</strong>；这一切都在<strong>单一的一体化模型</strong>中完成：它持续聆听，并自行决定何时开口。',
+        btnReport: '技术报告', btnTry: '试用 Mini-Omni3',
+        missionLine: '下一代音频语言模型。一颗<strong>用于交互的流式大脑</strong>。',
+        videoLabel: '观看 Mini-Omni3 实时聆听、决策与开口',
+
+        samplesH2: '同处一条流：先决策，再开口',
+        samplesIntro: '在一条连续的音频流上，Mini-Omni3 对每一个 chunk 做出判断，自行选择保持静默还是开口。在下面两段音频中，它只在事件值得回应时开口，其余时间保持静默。',
+        silentBadge: '&#10216;Silent&#10217; <span class="mult">&times; 18</span>',
+        speakBadge: '&#10216;Speak&#10217; <span class="mult">&times; 7</span>',
+        thClip: '音频',
+        s1Scene: '对重复出现的声音实时计数',
+        s1Gpt: '等整段音频结束才返回一句总结，无法在每个事件落地时给出实时计数。',
+        s1Gemini: '先缓冲一个固定窗口，因而滞后于声音，无法输出实时计数。',
+        s2Scene: '先是一声咳嗽，随后是背景音乐',
+        s2Gpt: '把音乐当作噪声，且不被明确询问就不会回应咳嗽。',
+        s2Gemini: '能单独识别音乐，却遗漏咳嗽，也无法把这两个事件联系起来。',
+
+        sfH2: 'SoundFlow：用常驻的 perceive-decide-respond 闭环训练模型',
+        sfCaption: '真实世界从不会停下来把一段完整音频递到你手里，因此一个交互模型必须持续聆听，并逐时逐刻自行判断：此刻是否值得开口。这把音频建模<strong>从“回答完整片段”推进为“运行一个连续闭环”</strong>，也<strong>从“一堆单任务模型”收拢为“一个模型”</strong>，让识别、翻译与对话都成为同一条常驻音频流内的指令。<span class="lead">SoundFlow</span> 覆盖完整流水线：将短片段拼接为长交互以构造数据、带历史回看与理解感知静默的 <strong>chunk 级决策训练</strong>，以及把首帧延迟降低 <em>4.5&times;</em> 的<strong>异步 FIFO 推理</strong>。',
+
+        dsH2: 'StreamAudio-2M',
+        dsSub: '大规模流式指令跟随语料库',
+        stItems: '条目', stRounds: '轮次', stHours: '小时', stCap: '种能力',
+        dsCaption: '<span class="lead">StreamAudio-2M</span> 覆盖<strong>七种能力</strong>：<em>音频理解、实时 ASR、语音翻译、语音对话、主动响应与环境感知 agent</em>。它通过从真实世界数据集（<strong>AudioSet、CommonVoice、CoVoST2、MOSS</strong> 等）采集片段，用 <strong>CosyVoice</strong> 将文本合成为语音，再将其拼接为带环境噪声与 <strong>token 级标注</strong>的流式序列而构建。',
+
+        resH2: '实验结果',
+        resIntro: 'Mini-Omni3 保持了基本能力，同时在以语音为主的输入上明显变强；并且在我们对比的所有模型中拥有最强的主动介入能力。',
+        rcTag1: '基础能力', rcTitle1: '基本能力得以保持', rcBody1: '离线识别与翻译与强基线持平，转向常驻并不会损失原有能力。',
+        rcTag2: '语音输入', rcTitle2: '明显变强', rcBody2: '在以语音为主的任务上明显更强，能随语音实时到来而跟踪并回应。',
+        rcTag3: '主动介入', rcTitle3: '最强的主动介入', rcBody3: '在我们测试的所有模型中拥有最强的主动介入能力：它不仅知道说什么，更知道何时该说。'
+      }
+    };
+
+    function applyLang(lang) {
+      var d = dict[lang] || dict.en;
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n');
+        if (d[key] != null) el.innerHTML = d[key];
+      });
+      document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh' : 'en');
+      document.querySelectorAll('#langToggle button').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+      });
+    }
+    document.querySelectorAll('#langToggle button').forEach(function(b) {
+      b.addEventListener('click', function() { applyLang(b.getAttribute('data-lang')); });
+    });
+    applyLang('en');
+  })();
+</script>
+
+</body>
+</html>
