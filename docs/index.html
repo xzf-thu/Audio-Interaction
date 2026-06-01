@@ -17,8 +17,11 @@
     --ink-mute: #6b7178;
     --rule: #e6e8eb;
     --rule-strong: #d0d4d9;
-    --accent: #0d7c8a;
-    --accent-soft: #e2f4f6;
+    --accent: #2563eb;          /* blue (primary) */
+    --accent-deep: #1d4ed8;
+    --accent-soft: #e8eefc;
+    --accent2: #ea7317;         /* orange (secondary) */
+    --accent2-soft: #fdeede;
     --code-bg: #0f1419;
     --code-ink: #e6edf3;
   }
@@ -51,7 +54,9 @@
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
 
-  .page { max-width:1180px; margin:0 auto; padding:28px 32px 96px; }
+  /* controlled, narrower page width with generous margins on large (Mac) screens */
+  .page { max-width: 940px; margin: 0 auto; padding: 28px 40px 96px; }
+  @media (min-width: 1280px) { .page { padding-left: 64px; padding-right: 64px; } }
 
   /* ----------------- Header / Title ----------------- */
   header.title-block { text-align:center; padding:8px 0 4px; }
@@ -62,7 +67,7 @@
   }
   .paper-name {
     font-weight:700; letter-spacing:-0.02em;
-    background: linear-gradient(90deg,#0ea5b7 0%,#2563eb 20%,#7c3aed 40%,#06b6d4 60%,#4f46e5 80%,#0ea5b7 100%);
+    background: linear-gradient(90deg,#1d4ed8 0%,#3b82f6 16%,#f97316 36%,#fdba74 50%,#f97316 64%,#3b82f6 84%,#1d4ed8 100%);
     background-size:300% 100%; -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent;
     animation: paper-name-gradient 6s linear infinite;
@@ -73,24 +78,34 @@
     font-size:clamp(24px,3vw,38px); line-height:1.2; letter-spacing:-0.015em;
     color:var(--ink); max-width:1000px; margin:0 auto; padding:4px 8px;
   }
-  .title-rule { display:block; margin:4px auto 12px; width:min(760px,86%); background:var(--ink); border-radius:1px; }
-  .title-rule-top { height:3px; margin-top:2px; margin-bottom:14px; }
-  .title-rule-bottom { height:1px; background:var(--rule-strong); margin-top:14px; margin-bottom:2px; }
+  /* wider rules than the title text */
+  .title-rule { display:block; margin:4px auto 12px; width:100%; background:var(--ink); border-radius:1px; }
+  .title-rule-top { height:4px; margin-top:2px; margin-bottom:16px; }
+  .title-rule-bottom { height:1px; background:var(--rule-strong); margin-top:16px; margin-bottom:2px; }
+
+  /* mission line, now between title and authors */
+  .mission-line {
+    margin:18px auto 4px; max-width:760px; text-align:center;
+    font-family:'Crimson Pro', Georgia, serif; font-style:italic; font-weight:500;
+    font-size:clamp(17px,1.5vw,20px); color:var(--ink-soft); line-height:1.45; padding:0 8px;
+  }
+  .mission-line strong { color:var(--accent2); font-style:normal; font-weight:700; }
 
   .authors {
-    text-align:center; margin-top:16px; font-family:'Crimson Pro', Georgia, serif;
-    font-size:19px; color:var(--ink); line-height:1.6; max-width:920px; margin-left:auto; margin-right:auto;
+    text-align:center; margin-top:18px; font-family:'Crimson Pro', Georgia, serif;
+    font-size:19px; color:var(--ink); line-height:1.85; max-width:920px;
+    margin-left:auto; margin-right:auto; word-spacing:0.4em; letter-spacing:0.01em;
   }
-  .authors sup { font-size:11px; color:var(--ink-mute); margin-left:1px; }
-  .affiliations { text-align:center; margin-top:6px; font-size:16px; color:var(--ink-mute); font-style:italic; line-height:1.4; }
+  .authors sup { font-size:11px; color:var(--ink-mute); margin-left:1px; word-spacing:normal; }
+  .affiliations { text-align:center; margin-top:1px; font-size:16px; color:var(--ink-mute); font-style:italic; line-height:1.4; }
   .affiliations .aff-num { font-style:normal; font-size:11px; vertical-align:super; margin-right:2px; color:var(--ink-mute); }
 
   /* ----------------- Hero (top.png) ----------------- */
   .hero { margin:26px auto 0; text-align:center; }
-  .hero img { display:block; margin:0 auto; width:78%; max-width:880px; height:auto; border-radius:12px; }
+  .hero img { display:block; margin:0 auto; width:90%; height:auto; border-radius:12px; }
   .hero .hero-fallback {
-    margin:0 auto; width:78%; max-width:880px; aspect-ratio:16/6; border-radius:12px; display:none;
-    align-items:center; justify-content:center; background:linear-gradient(135deg,#e7f3f4 0%,#eef0f4 100%);
+    margin:0 auto; width:90%; aspect-ratio:16/6; border-radius:12px; display:none;
+    align-items:center; justify-content:center; background:linear-gradient(135deg,#e7eefc 0%,#fdeede 100%);
     color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:14px; letter-spacing:0.06em;
   }
 
@@ -102,7 +117,7 @@
   }
   .paper-abstract strong { color:var(--ink); font-weight:700; }
 
-  /* ----------------- Link buttons ----------------- */
+  /* ----------------- Link buttons (5) ----------------- */
   .link-row { margin-top:22px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; font-family:'Inter', system-ui, sans-serif; }
   .pill {
     display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
@@ -114,88 +129,55 @@
   .pill.dark { background:#2b2f36; }
   .pill.black { background:#0f0f10; }
   .pill.wechat { background:#18c964; }
-  .pill.try { background:#0d7c8a; }
-
-  /* mission line */
-  .mission-line {
-    margin:18px auto 0; max-width:760px; text-align:center;
-    font-family:'Crimson Pro', Georgia, serif; font-style:italic; font-weight:500;
-    font-size:clamp(17px,1.5vw,20px); color:var(--ink-soft); line-height:1.45; padding:0 8px;
-  }
-  .mission-line strong { color:var(--accent); font-style:normal; font-weight:700; }
+  .pill.try { background: linear-gradient(120deg, var(--accent) 0%, var(--accent2) 130%); }
 
   .wechat-modal { position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,0.45); }
   .wechat-modal.is-open { display:flex; }
-  .wechat-card { position:relative; max-width:min(420px,92vw); width:100%; padding:22px; border-radius:20px; background:#0d7c8a; box-shadow:0 24px 70px rgba(15,23,42,0.35); }
+  .wechat-card { position:relative; max-width:min(420px,92vw); width:100%; padding:22px; border-radius:20px; background:var(--accent); box-shadow:0 24px 70px rgba(15,23,42,0.35); }
   .wechat-card img { display:block; width:100%; height:auto; border-radius:14px; background:#fff; }
   .wechat-card .qr-fallback { aspect-ratio:1/1; border-radius:14px; background:#fff; color:#6b7178; display:flex; align-items:center; justify-content:center; text-align:center; font-family:'JetBrains Mono', monospace; font-size:13px; padding:24px; line-height:1.5; }
   .wechat-close { position:absolute; top:-12px; right:-12px; width:32px; height:32px; border:none; border-radius:999px; background:#fff; color:#1f2328; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
 
   /* ----------------- YouTube video ----------------- */
   .video-section { margin-top:44px; text-align:center; }
-  .video-label {
-    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--ink-mute); margin:0 0 14px;
-  }
-  .video-wrap { max-width:860px; margin:0 auto; }
-  .video-frame {
-    position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
-    border:1px solid var(--rule); box-shadow:0 4px 24px rgba(0,0,0,0.10); background:#000;
-  }
+  .video-label { font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-mute); margin:0 0 14px; }
+  .video-wrap { width:90%; margin:0 auto; }
+  .video-frame { position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden; border:1px solid var(--rule); box-shadow:0 4px 24px rgba(0,0,0,0.10); background:#000; }
   .video-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 
   /* ----------------- Section heading ----------------- */
   section.block { margin-top:84px; }
   .section-head { text-align:center; margin-bottom:28px; }
-  .section-head h2 {
-    font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(26px,3vw,36px);
-    margin:0 0 10px; letter-spacing:-0.01em; color:var(--ink);
-  }
+  .section-head h2 { font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(26px,3vw,36px); margin:0 0 10px; letter-spacing:-0.01em; color:var(--ink); }
   .section-head p { margin:0 auto; max-width:840px; font-size:17px; color:var(--ink-soft); line-height:1.55; }
-
-  /* ----------------- Decision badges ----------------- */
-  .decision-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:18px auto 0; font-family:'JetBrains Mono', monospace; }
-  .dec-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px; font-size:13.5px; font-weight:600; letter-spacing:0.02em; }
-  .dec-badge.silent { background:#eef1f4; color:#5b636b; border:1px solid var(--rule-strong); }
-  .dec-badge.speak { background:var(--accent-soft); color:var(--accent); border:1px solid #9fd8df; }
-  .dec-badge .mult { font-family:'Crimson Pro', Georgia, serif; font-size:18px; font-weight:700; }
+  .section-head .subhead { display:block; margin-top:14px; font-family:'Crimson Pro', Georgia, serif; font-size:clamp(19px,1.8vw,22px); font-style:italic; font-weight:500; color:var(--ink-soft); }
 
   /* ----------------- Samples comparison table ----------------- */
   .table-wrap { margin-top:8px; border:1px solid var(--rule); border-radius:10px; background:var(--bg-table); overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,0.02); }
   .table-scroll { overflow-x:auto; }
-  table.compare { width:100%; border-collapse:collapse; font-family:'Inter', system-ui, sans-serif; font-size:14px; min-width:1040px; }
-  table.compare thead th {
-    font-weight:600; color:var(--ink); padding:16px 14px 12px; text-align:center;
-    border-bottom:1px solid var(--rule-strong); background:#fff; font-size:14px; letter-spacing:0.01em; vertical-align:top;
-  }
+  table.compare { width:100%; border-collapse:collapse; font-family:'Inter', system-ui, sans-serif; font-size:14px; min-width:840px; }
+  table.compare thead th { font-weight:600; color:var(--ink); padding:16px 14px 12px; text-align:center; border-bottom:1px solid var(--rule-strong); background:#fff; font-size:14px; letter-spacing:0.01em; vertical-align:top; }
   table.compare thead th .vendor { display:block; margin-top:4px; font-size:11px; font-weight:500; font-style:italic; color:var(--ink-mute); font-family:'Crimson Pro', Georgia, serif; }
-  table.compare thead th .vendor.ours { color:#0d7c8a; font-weight:600; font-style:normal; }
+  table.compare thead th .vendor.ours { color:var(--accent); font-weight:600; font-style:normal; }
   table.compare tbody td { padding:16px 14px; vertical-align:top; border-bottom:1px solid var(--rule); text-align:left; color:var(--ink-soft); line-height:1.5; font-size:13.5px; }
   table.compare tbody tr:last-child td { border-bottom:none; }
 
-  .col-clip { width:18%; }
-  .col-ours { width:34%; }
-  .col-other { width:24%; }
+  .col-clip { width:18%; } .col-ours { width:34%; } .col-other { width:24%; }
 
   .clip-cell { background:var(--bg-soft); text-align:center; }
   .clip-cell audio { display:block; width:100%; max-width:190px; height:34px; margin:0 auto 12px; outline:none; }
   .clip-cell .clip-name { display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-mute); margin-bottom:8px; letter-spacing:0.02em; }
-  .clip-cell .clip-scene { display:inline-block; padding:6px 11px; background:var(--accent-soft); color:var(--accent); border-radius:999px; font-weight:600; font-size:12px; line-height:1.3; }
+  .clip-cell .clip-scene { display:inline-block; padding:6px 11px; background:var(--accent2-soft); color:var(--accent2); border-radius:999px; font-weight:600; font-size:12px; line-height:1.3; }
 
-  /* Ours stream terminal */
   table.compare thead th.ours-col, table.compare tbody td.ours-col {
-    background: linear-gradient(180deg, rgba(191,230,234,0.30) 0%, rgba(219,244,246,0.50) 50%, rgba(191,230,234,0.30) 100%);
+    background: linear-gradient(180deg, rgba(191,210,252,0.30) 0%, rgba(219,232,254,0.50) 50%, rgba(191,210,252,0.30) 100%);
   }
-  table.compare thead th.ours-col { background: linear-gradient(180deg, rgba(191,230,234,0.55) 0%, rgba(219,244,246,0.7) 100%); }
-  table.compare thead th.ours-col .model-name { color:#0d7c8a; font-weight:700; }
+  table.compare thead th.ours-col { background: linear-gradient(180deg, rgba(191,210,252,0.55) 0%, rgba(219,232,254,0.7) 100%); }
+  table.compare thead th.ours-col .model-name { color:var(--accent); font-weight:700; }
 
-  .stream {
-    margin:0; background:var(--code-bg); color:var(--code-ink); border-radius:10px; padding:14px 16px;
-    font-family:'JetBrains Mono', ui-monospace, monospace; font-size:12.5px; line-height:1.7; overflow-x:auto;
-    white-space:pre-wrap; word-break:break-word;
-  }
+  .stream { margin:0; background:var(--code-bg); color:var(--code-ink); border-radius:10px; padding:14px 16px; font-family:'JetBrains Mono', ui-monospace, monospace; font-size:12.5px; line-height:1.7; overflow-x:auto; white-space:pre-wrap; word-break:break-word; }
   .stream .sil { color:#6b7686; }
-  .stream .pc { color:#5fb3c4; }
+  .stream .pc { color:#7eb6ff; }
   .stream .out { color:#e6edf3; }
 
   .other-out .stat { display:inline-flex; align-items:center; gap:5px; margin-bottom:6px; font-weight:600; font-size:12px; letter-spacing:0.02em; }
@@ -203,26 +185,11 @@
   .other-out .stat.bad { color:#b91c1c; }
 
   /* ----------------- Big figure / dataset ----------------- */
-  .section-head .subhead {
-    display:block; margin-top:14px; font-family:'Crimson Pro', Georgia, serif;
-    font-size:clamp(19px,1.8vw,22px); font-style:italic; font-weight:500; color:var(--ink-soft); letter-spacing:-0.005em;
-  }
   .subsection { margin-top:52px; }
-  .subsection-title {
-    font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(22px,2.2vw,28px);
-    letter-spacing:-0.01em; color:var(--ink); margin:0 0 28px; display:flex; align-items:center; gap:22px; width:100%;
-  }
-  .subsection-title::before, .subsection-title::after { content:""; flex:1 1 auto; height:1px; background:var(--rule-strong); }
-  .subsection-title > .title-text { flex:0 0 auto; display:inline-flex; align-items:baseline; gap:12px; white-space:nowrap; }
-  .subsection-title .accent {
-    font-family:'JetBrains Mono', ui-monospace, monospace; font-weight:500; font-size:0.74em; color:var(--accent);
-    background:var(--accent-soft); padding:3px 10px; border-radius:6px; margin-left:6px; vertical-align:0.08em;
-  }
-
-  .big-figure { margin:0; width:100%; border:1px solid var(--rule); border-radius:14px; overflow:hidden; background:var(--bg-soft); box-shadow:0 2px 14px rgba(0,0,0,0.04); }
+  .big-figure { margin:0 auto; width:90%; border:1px solid var(--rule); border-radius:14px; overflow:hidden; background:var(--bg-soft); box-shadow:0 2px 14px rgba(0,0,0,0.04); }
   .big-figure img { display:block; width:100%; height:auto; }
   .figure-placeholder { aspect-ratio:16/7; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f7f8fa 0%,#eef0f4 100%); color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; }
-  .figure-caption { margin:22px 0 0; width:100%; font-size:17px; line-height:1.65; color:var(--ink-soft); text-align:justify; }
+  .figure-caption { margin:22px auto 0; width:90%; font-size:17px; line-height:1.65; color:var(--ink-soft); text-align:justify; }
   .figure-caption .lead { font-family:'Crimson Pro', Georgia, serif; font-weight:600; color:var(--ink); }
   .figure-caption strong { color:var(--ink); font-weight:600; }
   .figure-caption em { font-style:italic; color:var(--ink); }
@@ -230,27 +197,85 @@
 
   .stat-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin:24px 0 0; width:100%; font-family:'Inter', system-ui, sans-serif; }
   .stat-pill { display:inline-flex; flex-direction:column; align-items:center; padding:12px 22px; border:1px solid var(--rule); border-radius:10px; background:#fff; min-width:130px; }
-  .stat-pill .value { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:26px; color:var(--accent); line-height:1.1; letter-spacing:-0.01em; }
+  .stat-pill .value { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:26px; line-height:1.1; letter-spacing:-0.01em; color:var(--accent); }
+  .stat-pill:nth-child(2) .value, .stat-pill:nth-child(4) .value { color:var(--accent2); }
   .stat-pill .label { margin-top:4px; font-size:12px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.08em; font-weight:500; }
 
   /* ----------------- Results highlight cards ----------------- */
-  .result-cards { display:flex; flex-wrap:wrap; gap:16px; margin:0 auto 28px; max-width:980px; }
+  .result-cards { display:flex; flex-wrap:wrap; gap:16px; margin:0 auto 30px; max-width:980px; }
   .result-card { flex:1 1 240px; border:1px solid var(--rule); border-radius:14px; padding:22px 22px 20px; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.03); }
-  .result-card .rc-tag { font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); }
+  .result-card .rc-tag { font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); }
   .result-card .rc-title { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:21px; color:var(--ink); margin:8px 0 6px; line-height:1.2; }
-  .result-card.best .rc-title { color:var(--accent); }
   .result-card .rc-body { font-size:14.5px; color:var(--ink-soft); line-height:1.55; font-family:'Inter', system-ui, sans-serif; }
+  .result-card.best { border-color:#f7c79a; background:linear-gradient(180deg,#fffaf4 0%,#fff 60%); }
+  .result-card.best .rc-tag { color:var(--accent2); }
+  .result-card.best .rc-title { color:var(--accent2); }
+
+  /* ----------------- Results slider ----------------- */
+  .results-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:0 auto 22px; padding:6px; background:var(--bg-soft); border:1px solid var(--rule); border-radius:14px; width:fit-content; max-width:100%; font-family:'Inter', system-ui, sans-serif; }
+  .tab-btn { appearance:none; -webkit-appearance:none; border:none; background:transparent; color:var(--ink-soft); font-family:inherit; font-size:15px; font-weight:600; padding:11px 22px; border-radius:10px; cursor:pointer; transition: background .2s ease, color .2s ease, box-shadow .2s ease; white-space:nowrap; }
+  .tab-btn:hover { color:var(--ink); }
+  .tab-btn.active { background:#fff; color:var(--accent); box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06); }
+
+  .results-stage { position:relative; margin:0 auto; width:90%; overflow:hidden; border:1px solid var(--rule); border-radius:14px; background:var(--bg-soft); box-shadow:0 2px 14px rgba(0,0,0,0.04); }
+  .results-track { display:flex; width:300%; transition: transform .55s cubic-bezier(0.22,0.61,0.36,1); will-change:transform; }
+  .results-panel { flex:0 0 calc(100% / 3); padding:20px 20px 22px; display:flex; flex-direction:column; align-items:center; }
+  .results-panel .panel-label { margin:0 0 12px; font-family:'JetBrains Mono', ui-monospace, monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); align-self:flex-start; }
+  .results-panel img { display:block; width:100%; height:auto; border-radius:8px; }
+  .results-panel .panel-placeholder { width:100%; aspect-ratio:16/8; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f7f8fa 0%,#eef0f4 100%); color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.06em; border-radius:8px; }
+
+  .results-stage .nav-arrow { position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:999px; background:rgba(255,255,255,0.96); border:1px solid var(--rule); color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,0,0,0.08); transition: transform .18s ease, background .18s ease; z-index:3; }
+  .results-stage .nav-arrow:hover { transform:translateY(-50%) scale(1.06); background:#fff; }
+  .results-stage .nav-arrow.prev { left:14px; } .results-stage .nav-arrow.next { right:14px; }
+  .results-stage .nav-arrow svg { width:18px; height:18px; }
+  .results-dots { display:flex; justify-content:center; gap:8px; margin:18px auto 0; }
+  .results-dots .dot { width:8px; height:8px; border-radius:999px; background:var(--rule-strong); cursor:pointer; transition: background .2s ease, transform .2s ease; border:none; padding:0; }
+  .results-dots .dot.active { background:var(--accent); transform:scale(1.25); }
+
+  /* ----------------- Experience (mountain) ----------------- */
+  section.experience { margin-top:110px; width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
+  .mountain-stage { position:relative; width:100%; min-height:720px; overflow:hidden; }
+  .mountain-stage::before {
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.92) 8%, rgba(255,255,255,0.72) 22%, rgba(255,255,255,0.42) 42%, rgba(255,255,255,0.18) 65%, rgba(255,255,255,0.05) 82%, rgba(255,255,255,0) 100%);
+  }
+  .mountain-stage .mountain-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:1; }
+  .mountain-fallback { position:absolute; inset:0; z-index:1; background: linear-gradient(180deg,#cfe1f5 0%,#aecbe9 18%,#8aa9cf 38%,#5f7da3 60%,#3d5577 78%,#243349 100%); }
+  .mountain-fallback::after {
+    content:""; position:absolute; left:0; right:0; bottom:0; height:65%;
+    background: radial-gradient(ellipse 60% 50% at 30% 100%, rgba(255,255,255,0.55), transparent 70%), radial-gradient(ellipse 70% 60% at 75% 100%, rgba(255,255,255,0.65), transparent 70%), linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.25) 60%, rgba(255,255,255,0.55) 100%);
+    clip-path: polygon(0% 100%,0% 55%,12% 38%,22% 50%,33% 22%,45% 45%,55% 30%,68% 10%,78% 38%,88% 25%,100% 50%,100% 100%);
+  }
+  .mountain-content { position:relative; z-index:3; width:100%; min-height:720px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding:80px 24px 110px; text-align:center; }
+  .mountain-content h3 { font-family:'Crimson Pro', Georgia, serif; font-weight:600; font-size:clamp(44px,6vw,84px); letter-spacing:-0.025em; line-height:1.05; margin:0 0 12px; color:#fff; text-shadow:0 2px 14px rgba(20,40,70,0.35), 0 1px 2px rgba(20,40,70,0.2); }
+  .mountain-content .mountain-sub { font-family:'Crimson Pro', Georgia, serif; font-style:italic; font-size:clamp(18px,1.8vw,22px); color:#fff; opacity:0.95; max-width:680px; margin:0 auto 30px; line-height:1.5; text-shadow:0 1px 8px rgba(20,40,70,0.35); }
+  .experience-cta {
+    display:inline-flex; align-items:center; gap:10px; padding:13px 30px; border-radius:999px;
+    border:2px solid rgba(255,255,255,0.85); background:#fff; color:var(--accent-deep);
+    font-family:'Inter', system-ui, sans-serif; font-weight:700; font-size:15px; letter-spacing:0.01em;
+    text-decoration:none; cursor:pointer; box-shadow:0 6px 22px rgba(20,40,70,0.22), 0 2px 6px rgba(20,40,70,0.15);
+    animation: cta-blink 1.8s ease-in-out infinite; transition: transform .18s ease;
+  }
+  .experience-cta:hover { transform:translateY(-2px) scale(1.02); animation-play-state:paused; }
+  .experience-cta svg { width:14px; height:14px; }
+  @keyframes cta-blink {
+    0%,100% { opacity:1; box-shadow:0 6px 22px rgba(20,40,70,0.22), 0 2px 6px rgba(20,40,70,0.15), 0 0 0 0 rgba(255,255,255,0.55); }
+    50% { opacity:0.78; box-shadow:0 6px 22px rgba(20,40,70,0.22), 0 2px 6px rgba(20,40,70,0.15), 0 0 0 12px rgba(255,255,255,0); }
+  }
+  .mountain-footnote { margin:44px auto 0; font-family:'Crimson Pro', Georgia, serif; font-style:italic; font-size:14px; color:#fff; opacity:0.85; text-shadow:0 1px 6px rgba(20,40,70,0.35); max-width:620px; line-height:1.5; }
 
   /* ----------------- Responsive ----------------- */
   @media (max-width:720px) {
     .page { padding:20px 18px 64px; }
     h1.paper-title .paper-fulltitle { font-size:24px; }
-    .authors { font-size:16px; } .affiliations { font-size:14px; }
+    .authors { font-size:16px; word-spacing:0.25em; } .affiliations { font-size:14px; }
     .pill { font-size:14px; padding:9px 14px; }
     .paper-abstract { font-size:15px; text-align:left; }
-    .hero img, .hero .hero-fallback { width:96%; }
+    .hero img, .hero .hero-fallback, .big-figure, .figure-caption, .video-wrap, .results-stage { width:100%; }
     .figure-caption { font-size:16px; text-align:left; }
     .stat-pill { min-width:104px; padding:10px 16px; } .stat-pill .value { font-size:22px; }
+    .tab-btn { padding:9px 14px; font-size:13.5px; }
+    .mountain-stage, .mountain-content { min-height:560px; } .mountain-content { padding:60px 20px 80px; }
   }
 </style>
 </head>
@@ -264,7 +289,7 @@
 
 <div class="page">
 
-  <!-- ===================== TITLE / AUTHORS / AFFILIATIONS ===================== -->
+  <!-- ===================== TITLE / MISSION / AUTHORS ===================== -->
   <header class="title-block">
     <h1 class="paper-title">
       <span class="title-rule title-rule-top"></span>
@@ -274,6 +299,8 @@
       </span>
       <span class="title-rule title-rule-bottom"></span>
     </h1>
+
+    <p class="mission-line" data-i18n="missionLine">The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.</p>
 
     <p class="authors" data-i18n="authors">
       <span class="name">Zhifei Xie</span><sup>1*</sup>,
@@ -310,7 +337,7 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.67 5.56.67 11.83c0 5.02 3.25 9.27 7.76 10.77.57.1.78-.25.78-.55v-2.13c-3.16.69-3.83-1.36-3.83-1.36-.52-1.31-1.27-1.66-1.27-1.66-1.03-.7.08-.69.08-.69 1.14.08 1.74 1.17 1.74 1.17 1.01 1.74 2.66 1.24 3.31.95.1-.74.4-1.24.72-1.53-2.52-.29-5.17-1.26-5.17-5.6 0-1.24.44-2.25 1.17-3.04-.12-.29-.51-1.44.11-2.99 0 0 .95-.3 3.12 1.16.91-.25 1.88-.38 2.85-.39.97.01 1.94.14 2.85.39 2.17-1.46 3.12-1.16 3.12-1.16.62 1.55.23 2.7.11 2.99.73.79 1.17 1.8 1.17 3.04 0 4.35-2.66 5.31-5.19 5.59.41.35.77 1.04.77 2.1v3.11c0 .3.21.66.79.55 4.5-1.5 7.75-5.75 7.75-10.77C23.33 5.56 18.27.5 12 .5z"/></svg>
         Code
       </a>
-      <a href="wechat.jpg" class="pill wechat" id="wechatLink">
+      <a href="figures/wechat.jpg" class="pill wechat" id="wechatLink">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.1 3.58 2.83 4.68L4 17l2.75-1.4c.85.23 1.76.4 2.75.4.35 0 .7-.02 1.04-.05A6.06 6.06 0 0 1 10 14c0-3.31 3.36-6 7.5-6 .19 0 .37.01.56.02C17.39 5.71 13.87 4 9.5 4zM7 8.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm5 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM17.5 9C13.91 9 11 11.24 11 14s2.91 5 6.5 5c.83 0 1.6-.13 2.31-.34L22 20l-.7-2.1c.99-.91 1.7-2.11 1.7-3.4 0-2.76-2.91-5.5-5.5-5.5zm-2.5 4a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm5 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z"/></svg>
         WeChat
       </a>
@@ -324,15 +351,12 @@
       </a>
     </div>
 
-    <!-- mission line under the buttons -->
-    <p class="mission-line" data-i18n="missionLine">The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.</p>
-
     <div class="wechat-modal" id="wechatModal" aria-hidden="true">
       <div class="wechat-card" role="dialog" aria-modal="true" aria-label="WeChat QR code">
         <button class="wechat-close" id="wechatClose" type="button" aria-label="Close">&times;</button>
-        <img src="wechat.jpg" alt="WeChat QR code"
+        <img src="figures/wechat.jpg" alt="WeChat QR code"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-        <div class="qr-fallback" style="display:none;">wechat.jpg<br/>Scan to join the WeChat group</div>
+        <div class="qr-fallback" style="display:none;">figures/wechat.jpg<br/>Scan to join the WeChat group</div>
       </div>
     </div>
   </header>
@@ -352,12 +376,8 @@
   <!-- ===================== SAMPLES ===================== -->
   <section class="block">
     <div class="section-head">
-      <h2 data-i18n="samplesH2">Live on One Stream: Decide, then Speak</h2>
-      <p data-i18n="samplesIntro">On a single continuous stream, Mini-Omni3 judges every chunk and chooses whether to stay silent or speak. Across the two clips below it spoke only when an event warranted it, and stayed silent the rest of the time.</p>
-      <div class="decision-row">
-        <span class="dec-badge silent" data-i18n="silentBadge">&#10216;Silent&#10217; <span class="mult">&times; 18</span></span>
-        <span class="dec-badge speak" data-i18n="speakBadge">&#10216;Speak&#10217; <span class="mult">&times; 7</span></span>
-      </div>
+      <h2 data-i18n="samplesH2">Native Streaming Audio Understanding</h2>
+      <p data-i18n="samplesIntro">Mini-Omni3 is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.</p>
     </div>
 
     <div class="table-wrap">
@@ -461,12 +481,12 @@
     <div class="stat-row">
       <div class="stat-pill"><span class="value">2.6M</span><span class="label" data-i18n="stItems">items</span></div>
       <div class="stat-pill"><span class="value">7.4M</span><span class="label" data-i18n="stRounds">rounds</span></div>
-      <div class="stat-pill"><span class="value">66.7K</span><span class="label" data-i18n="stHours">hours</span></div>
-      <div class="stat-pill"><span class="value">7</span><span class="label" data-i18n="stCap">capabilities</span></div>
+      <div class="stat-pill"><span class="value">302K</span><span class="label" data-i18n="stHours">hours</span></div>
+      <div class="stat-pill"><span class="value">7</span><span class="label" data-i18n="stCap">core capabilities</span></div>
     </div>
 
     <p class="figure-caption" data-i18n="dsCaption">
-      <span class="lead">StreamAudio-2M</span> covers <strong>seven capabilities</strong>: <em>audio understanding,
+      <span class="lead">StreamAudio-2M</span> covers <strong>seven core capabilities</strong>: <em>audio understanding,
       real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by
       collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more),
       synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with
@@ -499,14 +519,89 @@
       </div>
     </div>
 
-    <figure class="big-figure">
-      <img src="figures/results.png" alt="Mini-Omni3 results"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-      <div class="figure-placeholder" style="display:none;">[ figures/results.png ]</div>
-    </figure>
+    <div class="results-tabs" role="tablist">
+      <button class="tab-btn active" data-index="0" role="tab" aria-selected="true"  data-i18n="resTab1">Result 1</button>
+      <button class="tab-btn"        data-index="1" role="tab" aria-selected="false" data-i18n="resTab2">Result 2</button>
+      <button class="tab-btn"        data-index="2" role="tab" aria-selected="false" data-i18n="resTab3">Result 3</button>
+    </div>
+
+    <div class="results-stage" id="resultsStage">
+      <button class="nav-arrow prev" id="resultsPrev" aria-label="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="results-track" id="resultsTrack">
+        <div class="results-panel">
+          <span class="panel-label">01 &middot; Result 1</span>
+          <img src="figures/result1.png" alt="Result 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="panel-placeholder" style="display:none;">[ figures/result1.png ]</div>
+        </div>
+        <div class="results-panel">
+          <span class="panel-label">02 &middot; Result 2</span>
+          <img src="figures/result2.png" alt="Result 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="panel-placeholder" style="display:none;">[ figures/result2.png ]</div>
+        </div>
+        <div class="results-panel">
+          <span class="panel-label">03 &middot; Result 3</span>
+          <img src="figures/result3.png" alt="Result 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="panel-placeholder" style="display:none;">[ figures/result3.png ]</div>
+        </div>
+      </div>
+      <button class="nav-arrow next" id="resultsNext" aria-label="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="results-dots" id="resultsDots">
+      <button class="dot active" data-index="0" aria-label="Slide 1"></button>
+      <button class="dot"        data-index="1" aria-label="Slide 2"></button>
+      <button class="dot"        data-index="2" aria-label="Slide 3"></button>
+    </div>
   </section>
 
 </div><!-- /.page -->
+
+<!-- ===================== EXPERIENCE (mountain, full width) ===================== -->
+<section class="experience">
+  <div class="mountain-stage">
+    <img class="mountain-img" src="figures/background.png" alt="Snowy mountain"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+    <div class="mountain-fallback" style="display:none;"></div>
+    <div class="mountain-content">
+      <h3 data-i18n="expH">Experience Mini-Omni3</h3>
+      <p class="mountain-sub" data-i18n="expSub">One unbroken session, one model. It listens, decides, and speaks, live.</p>
+      <a href="https://github.com/mini-omni3/Mini-Omni3" class="experience-cta" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <span data-i18n="expCta">Try Mini-Omni3</span>
+      </a>
+      <p class="mountain-footnote" data-i18n="expFoot">Offline audio answers a finished clip. Real audio needs a model that keeps listening, and decides, moment to moment, when to speak.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ---------- Results slider ----------
+  (function() {
+    var track = document.getElementById('resultsTrack');
+    var prevBtn = document.getElementById('resultsPrev');
+    var nextBtn = document.getElementById('resultsNext');
+    var tabBtns = document.querySelectorAll('.results-tabs .tab-btn');
+    var dots = document.querySelectorAll('.results-dots .dot');
+    if (!track) return;
+    var index = 0, total = 3;
+    function go(i) {
+      index = (i + total) % total;
+      track.style.transform = 'translateX(' + (-(index * (100 / total))) + '%)';
+      tabBtns.forEach(function(b) { var on = parseInt(b.dataset.index,10)===index; b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false'); });
+      dots.forEach(function(d) { d.classList.toggle('active', parseInt(d.dataset.index,10)===index); });
+    }
+    tabBtns.forEach(function(b) { b.addEventListener('click', function(){ go(parseInt(b.dataset.index,10)); }); });
+    dots.forEach(function(d) { d.addEventListener('click', function(){ go(parseInt(d.dataset.index,10)); }); });
+    prevBtn.addEventListener('click', function(){ go(index-1); });
+    nextBtn.addEventListener('click', function(){ go(index+1); });
+    var startX = null, stage = document.getElementById('resultsStage');
+    stage.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; }, { passive:true });
+    stage.addEventListener('touchend', function(e){ if (startX===null) return; var dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx)>40) go(index + (dx<0?1:-1)); startX=null; }, { passive:true });
+  })();
+</script>
 
 <script>
   // ---------- WeChat modal ----------
@@ -514,12 +609,12 @@
     var link = document.getElementById('wechatLink');
     var modal = document.getElementById('wechatModal');
     var close = document.getElementById('wechatClose');
-    function open(e) { if (e) e.preventDefault(); if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); } }
-    function shut() { if (modal) { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); } }
+    function open(e){ if (e) e.preventDefault(); if (modal){ modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); } }
+    function shut(){ if (modal){ modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); } }
     if (link) link.addEventListener('click', open);
     if (close) close.addEventListener('click', shut);
-    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) shut(); });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') shut(); });
+    if (modal) modal.addEventListener('click', function(e){ if (e.target===modal) shut(); });
+    document.addEventListener('keydown', function(e){ if (e.key==='Escape') shut(); });
   })();
 </script>
 
@@ -529,17 +624,15 @@
     var dict = {
       en: {
         paperTitle: '<span class="paper-name">Mini-Omni3:</span> Towards Unified Audio Interaction Models<br/>that Continuously Perceive, Decide and Respond',
+        missionLine: 'The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.',
         authors: '<span class="name">Zhifei Xie</span><sup>1*</sup>, <span class="name">Zihang Liu</span><sup>2*</sup>, <span class="name">Ze An</span><sup>2</sup>, <span class="name">Ziyang Ma</span><sup>1</sup>, <span class="name">Xiaobin Hu</span><sup>2</sup><br/><span class="name">Mingbao Lin</span><sup>2&dagger;</sup>, <span class="name">Deheng Ye</span><sup>1&dagger;</sup>, <span class="name">Shuicheng Yan</span><sup>2&dagger;</sup>, <span class="name">Chunyan Miao</span><sup>1&dagger;</sup>',
         affiliations: '<span class="aff-num">1</span>NTU &nbsp;&nbsp; <span class="aff-num">2</span>NUS',
         paperAbstract: 'Today&rsquo;s Large Audio Language Models are stuck in an <strong>offline paradigm</strong>: you hand them a finished clip and wait for one reply. Streaming models exist, but each only handles a single, isolated task. We formalize the missing capability as a new concept, the <strong>Audio Interaction Model</strong>, and build the first one. <strong>Mini-Omni3</strong> is a unified, always-on model that runs conventional <strong>offline tasks (ASR, S2TT)</strong>, runs <strong>streaming tasks in real time</strong>, and achieves <strong>general streaming audio instruction following on a live stream</strong>, all inside a <strong>single all-in-one model</strong> that keeps listening and decides for itself when to speak.',
         btnReport: 'Technical Report', btnTry: 'Try Mini-Omni3',
-        missionLine: 'The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.',
         videoLabel: 'Watch Mini-Omni3 listen, decide and speak, live',
 
-        samplesH2: 'Live on One Stream: Decide, then Speak',
-        samplesIntro: 'On a single continuous stream, Mini-Omni3 judges every chunk and chooses whether to stay silent or speak. Across the two clips below it spoke only when an event warranted it, and stayed silent the rest of the time.',
-        silentBadge: '&#10216;Silent&#10217; <span class="mult">&times; 18</span>',
-        speakBadge: '&#10216;Speak&#10217; <span class="mult">&times; 7</span>',
+        samplesH2: 'Native Streaming Audio Understanding',
+        samplesIntro: 'Mini-Omni3 is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.',
         thClip: 'Clip',
         s1Scene: 'Counting a repeating sound, live',
         s1Gpt: 'Waits for the whole clip, then returns one summary. Never produces a running count as each event lands.',
@@ -553,28 +646,32 @@
 
         dsH2: 'StreamAudio-2M',
         dsSub: 'A large-scale streaming instruction-following corpus',
-        stItems: 'items', stRounds: 'rounds', stHours: 'hours', stCap: 'capabilities',
-        dsCaption: '<span class="lead">StreamAudio-2M</span> covers <strong>seven capabilities</strong>: <em>audio understanding, real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more), synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with environmental noise and <strong>token-level annotation</strong>.',
+        stItems: 'items', stRounds: 'rounds', stHours: 'hours', stCap: 'core capabilities',
+        dsCaption: '<span class="lead">StreamAudio-2M</span> covers <strong>seven core capabilities</strong>: <em>audio understanding, real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more), synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with environmental noise and <strong>token-level annotation</strong>.',
 
         resH2: 'Results',
         resIntro: 'Mini-Omni3 keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.',
         rcTag1: 'Foundation', rcTitle1: 'Basic ability preserved', rcBody1: 'Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.',
         rcTag2: 'Speech input', rcTitle2: 'Markedly stronger', rcBody2: 'On speech-driven tasks the model is clearly stronger, tracking and responding to live speech as it arrives.',
-        rcTag3: 'Proactive', rcTitle3: 'Best-in-class intervention', rcBody3: 'The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.'
+        rcTag3: 'Proactive', rcTitle3: 'Best-in-class intervention', rcBody3: 'The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.',
+        resTab1: 'Result 1', resTab2: 'Result 2', resTab3: 'Result 3',
+
+        expH: 'Experience Mini-Omni3',
+        expSub: 'One unbroken session, one model. It listens, decides, and speaks, live.',
+        expCta: 'Try Mini-Omni3',
+        expFoot: 'Offline audio answers a finished clip. Real audio needs a model that keeps listening, and decides, moment to moment, when to speak.'
       },
       zh: {
         paperTitle: '<span class="paper-name">Mini-Omni3：</span> 迈向统一的 Audio Interaction Model<br/>持续地感知、决策与响应',
+        missionLine: '下一代音频语言模型。一颗<strong>用于交互的流式大脑</strong>。',
         authors: '<span class="name">谢知非</span><sup>1*</sup>，<span class="name">刘子航</span><sup>2*</sup>，<span class="name">安泽</span><sup>2</sup>，<span class="name">马子阳</span><sup>1</sup>，<span class="name">胡晓彬</span><sup>2</sup><br/><span class="name">林明宝</span><sup>2&dagger;</sup>，<span class="name">叶德珩</span><sup>1&dagger;</sup>，<span class="name">颜水成</span><sup>2&dagger;</sup>，<span class="name">缪春燕</span><sup>1&dagger;</sup>',
         affiliations: '<span class="aff-num">1</span>南洋理工大学（NTU） &nbsp;&nbsp; <span class="aff-num">2</span>新加坡国立大学（NUS）',
         paperAbstract: '当今的大型音频语言模型仍停留在<strong>离线范式</strong>：你递给它一段完整音频，然后等待一次回复。流式模型虽然存在，但每个都只能处理单一、孤立的任务。我们将这一缺失的能力形式化为一个新概念，即 <strong>Audio Interaction Model</strong>，并构建了第一个这样的模型。<strong>Mini-Omni3</strong> 是一个统一、常驻的模型，既能运行传统的<strong>离线任务（ASR、S2TT）</strong>，又能<strong>实时运行流式任务</strong>，并在<strong>实时音频流上实现通用的流式音频指令跟随</strong>；这一切都在<strong>单一的一体化模型</strong>中完成：它持续聆听，并自行决定何时开口。',
         btnReport: '技术报告', btnTry: '试用 Mini-Omni3',
-        missionLine: '下一代音频语言模型。一颗<strong>用于交互的流式大脑</strong>。',
         videoLabel: '观看 Mini-Omni3 实时聆听、决策与开口',
 
-        samplesH2: '同处一条流：先决策，再开口',
-        samplesIntro: '在一条连续的音频流上，Mini-Omni3 对每一个 chunk 做出判断，自行选择保持静默还是开口。在下面两段音频中，它只在事件值得回应时开口，其余时间保持静默。',
-        silentBadge: '&#10216;Silent&#10217; <span class="mult">&times; 18</span>',
-        speakBadge: '&#10216;Speak&#10217; <span class="mult">&times; 7</span>',
+        samplesH2: '原生流式音频理解',
+        samplesIntro: 'Mini-Omni3 面向原生流式音频理解进行训练：每个任务不再需要一个单独的模型，而只是同一个模型里的一条指令。它甚至比指令走得更远，在没有任何提示时也能自行判断此刻是否值得开口，主动介入。',
         thClip: '音频',
         s1Scene: '对重复出现的声音实时计数',
         s1Gpt: '等整段音频结束才返回一句总结，无法在每个事件落地时给出实时计数。',
@@ -588,14 +685,20 @@
 
         dsH2: 'StreamAudio-2M',
         dsSub: '大规模流式指令跟随语料库',
-        stItems: '条目', stRounds: '轮次', stHours: '小时', stCap: '种能力',
-        dsCaption: '<span class="lead">StreamAudio-2M</span> 覆盖<strong>七种能力</strong>：<em>音频理解、实时 ASR、语音翻译、语音对话、主动响应与环境感知 agent</em>。它通过从真实世界数据集（<strong>AudioSet、CommonVoice、CoVoST2、MOSS</strong> 等）采集片段，用 <strong>CosyVoice</strong> 将文本合成为语音，再将其拼接为带环境噪声与 <strong>token 级标注</strong>的流式序列而构建。',
+        stItems: '条目', stRounds: '轮次', stHours: '小时', stCap: '种核心能力',
+        dsCaption: '<span class="lead">StreamAudio-2M</span> 覆盖<strong>七种核心能力</strong>：<em>音频理解、实时 ASR、语音翻译、语音对话、主动响应与环境感知 agent</em>。它通过从真实世界数据集（<strong>AudioSet、CommonVoice、CoVoST2、MOSS</strong> 等）采集片段，用 <strong>CosyVoice</strong> 将文本合成为语音，再将其拼接为带环境噪声与 <strong>token 级标注</strong>的流式序列而构建。',
 
         resH2: '实验结果',
         resIntro: 'Mini-Omni3 保持了基本能力，同时在以语音为主的输入上明显变强；并且在我们对比的所有模型中拥有最强的主动介入能力。',
         rcTag1: '基础能力', rcTitle1: '基本能力得以保持', rcBody1: '离线识别与翻译与强基线持平，转向常驻并不会损失原有能力。',
         rcTag2: '语音输入', rcTitle2: '明显变强', rcBody2: '在以语音为主的任务上明显更强，能随语音实时到来而跟踪并回应。',
-        rcTag3: '主动介入', rcTitle3: '最强的主动介入', rcBody3: '在我们测试的所有模型中拥有最强的主动介入能力：它不仅知道说什么，更知道何时该说。'
+        rcTag3: '主动介入', rcTitle3: '最强的主动介入', rcBody3: '在我们测试的所有模型中拥有最强的主动介入能力：它不仅知道说什么，更知道何时该说。',
+        resTab1: '结果 1', resTab2: '结果 2', resTab3: '结果 3',
+
+        expH: '体验 Mini-Omni3',
+        expSub: '一段不中断的会话、一个模型：它实时地聆听、决策并开口。',
+        expCta: '试用 Mini-Omni3',
+        expFoot: '离线音频回答的是一段完整的片段。真实音频需要一个持续聆听的模型，并时刻判断何时开口。'
       }
     };
 
