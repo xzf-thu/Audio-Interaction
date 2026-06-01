@@ -61,6 +61,7 @@ def run_inference(
                 model, audio_encoder, tokenizer, prefix_ids,
                 rounds=rounds, audio_paths=audio_paths,
                 max_returned_tokens=max_new_tokens,
+                temperature=0.0, top_p=0.0,  # greedy/argmax → deterministic output
             )
     finally:
         model.clear_kv_cache()
