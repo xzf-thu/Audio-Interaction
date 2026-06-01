@@ -1,7 +1,7 @@
 # Mini-Omni3: A unified Audio Interaction Model
 
 <p align="center">
-  <img src="assets/figures/top.png" alt="Mini-Omni3 Logo" width="80%">
+  <img src="assets/figures/top.png" alt="Mini-Omni3 Logo" width="100%">
 </p>
 
 
@@ -45,14 +45,14 @@ We introduce **MINI-OMNI3**, the first **always-on Streaming Audio Language Mode
 ## Contents
 
 * **[Quick Start — play first](#quick-start)**
-* **[Everything, at once](#everything-at-once)** — the one-session demo + head-to-head comparisons
-* **[How it works: SoundFlow](#how-it-works)**
-* **[Finetuning](#finetuning)**
-* **[Evaluation](#evaluation)**
+* **[Demos](#demos)** 
+* **[SoundFlow: Train your own Audio Interaction Model](#how-it-works)**
+* **[StreamAudio-2M dataset](#datasets)**
+* **[Evaluation results](#evaluation)**
 * **[License, Citation & Stars](#citation)**
 
 
-## <a id="quick-start"></a>⚡ Quick Start — play first
+## <a id="quick-start"></a>⚡ Quick Start
 
 Mini-Omni3 is an always-on model: it keeps listening to incoming audio frames and **decides for itself when to speak**. By default it stays in a `⟨Silent⟩` state and only emits output when the task or the acoustic context warrants it — so you can open a single session, stream audio into it continuously, and watch every capability take turns on its own.
 
@@ -61,53 +61,43 @@ Mini-Omni3 is an always-on model: it keeps listening to incoming audio frames an
 git clone https://github.com/mini-omni3/Mini-Omni3.git
 cd Mini-Omni3
 
-conda create -n mini-omni3 python=3.10 -y
+conda create -n mini-omni3 python=3.12 -y
 conda activate mini-omni3
+# please check if you are using torch-cuda
 pip install -r requirements.txt
+# install ffmpeg
+conda install -c conda-forge ffmpeg
 ```
 
 **Download Weights**
 ```bash
-python scripts/download.py
+# download model weights from huggingface
+export PYTHONPATH=./
+python download.py
 ```
 
-**Offline Inference**
+**WebUI real-time demo**
 ```bash
-# infer with default audio
-bash scripts/inference.sh
+# download model weights from huggingface
+export PYTHONPATH=./
+python web/server.py
 
-# Use your own audio:
-bash scripts/inference.sh --audio /path/to/audio.wav
+# then goto localhost:5001
 ```
 
-**Streaming Inference**
-
-Mini-Omni3 adopts a FIFO-style streaming mechanism with asynchronous encoding and decoding plus a lightweight cache, so latency and compute stay stable in the always-on setting. Feed audio frames chunk by chunk and the model will emit partial output as soon as it transitions from `⟨Silent⟩` to `⟨Speak⟩`:
-
+**Inference**
 ```bash
-python infer_streaming.py \
-  --audio assets/example/streaming_long_example.wav \
-  --step_ms 1000 \
-  --reset_interval_sec 120 \
-  --overlap_sec 2 \
-  --max_new_tokens 32
-```
+# infer with default audio. make sure add ./ to the project base dir.
+# infer_online stimulate continous audio input.
+export PYTHONPATH=./
+python infer_online.py
 
-The script prints partial text after each streaming step and a final transcript once the stream finishes. For long audio, it periodically resets the streaming state so the internally accumulated context does not grow without bound. Set `--reset_interval_sec 0` to disable state resets.
-
-On smaller GPUs, the CLI automatically uses conservative defaults unless you override them: `gpu_memory_utilization=0.85`, `max_model_len=8192`, `max_num_seqs=1`, and `max_num_batched_tokens=2048`.
-
-```bash
-python infer_streaming.py \
-  --gpu_memory_utilization 0.85 \
-  --max_model_len 8192 \
-  --max_num_seqs 1 \
-  --max_num_batched_tokens 2048 \
-  --audio /path/to/audio.wav
+# Use your own audio for offline testing:
+python infer_offline.py
 ```
 
 
-## <a id="everything-at-once"></a>🎬 Everything, at once
+## <a id="demos"></a>🎬 Demos
 
 Most audio models do one job and wait to be asked. Mini-Omni3's defining trait is that **all of its abilities live in the same continuous stream**, and the model itself decides which one is needed at each moment. The demo below is **one unbroken session, one model, no mode switches, no prompts** — transcription, understanding, conversation, and proactive intervention simply happen as the soundscape changes.
 
@@ -115,20 +105,6 @@ Most audio models do one job and wait to be asked. Mini-Omni3's defining trait i
   <video src="assets/demo/all_in_one_session.mp4" controls width="320"></video>
 </div>
 
-#### One stream, one model, capabilities firing on their own
-
-| Time | What's happening in the stream | Model state | What Mini-Omni3 does |
-|---|---|---|---|
-| 0:00 | User starts talking through a plan out loud | `⟨Speak⟩` | Streams a live transcript + on-the-fly EN→ZH translation, chunk by chunk |
-| 0:18 | A song fades in on a nearby speaker; user asks "what's this track?" | `⟨Speak⟩` | Fuses speech **and** background music, answers in-context without losing the conversation |
-| 0:31 | User goes quiet and keeps working | `⟨Silent⟩` | Stays silent — no filler, no hallucinated turns |
-| 0:52 | A smoke alarm starts beeping | `⟨Silent⟩` → `⟨Speak⟩` | Flips to speaking on its own and warns the user — **no wake word, no prompt** |
-
-> The point isn't four features. It's **one always-on policy** over `⟨Silent⟩` / `⟨Speak⟩` that quietly routes between perception, conversation, and intervention. Pipelines that bolt together an ASR model, a chat model, and a wake-word detector can't make these decisions jointly — Mini-Omni3 does it in a single forward stream.
-
----
-
-Below, the same four abilities are broken out individually and put **head-to-head** against `gpt-audio`, `doubao-voicechat`, and `gemini-omni`. Legend: ✅ handles it natively · ⚠️ partial / degraded · ❌ can't do it in a streaming setting.
 
 #### Capability 1 — Online audio understanding
 
@@ -213,119 +189,146 @@ Below, the same four abilities are broken out individually and put **head-to-hea
 
 </details>
 
-### Why it adds up
 
-✅ **One always-on model, not a pipeline** — continuously ingests audio frames and decides **when** and **how** to respond via `⟨Silent⟩` / `⟨Speak⟩` control tokens, so every capability above shares the same context.
 
-✅ **Full-spectrum perception** — jointly handles **speech, music, and general audio** (background sounds, pauses, non-verbal cues), which is exactly what lets understanding, chat, and intervention coexist.
-
-✅ **Low-latency by design** — FIFO-style streaming with **asynchronous encoding and decoding** and a lightweight cache for stable latency and compute utilization.
-
-✅ **No accuracy tax for going streaming** — trained with chunked inputs and streaming objectives, yet stays **competitive with strong offline baselines** (e.g., **78.4 vs. 77.9**, **82.1 vs. 81.5**, **69.8 vs. 69.2** against Qwen2.5-Omni-3B).
+## <a id="how-it-works"></a>⚙️ SoundFlow: Train your own Audio Interaction Model
+Offline audio models answer a finished clip, but real audio needs a model that listens continuously and decides, moment to moment, whether to speak. SoundFlow trains a single model that at every chunk chooses between `⟨Speak⟩` and `⟨Silent⟩`, so recognition, translation, and dialogue become instructions inside one always-on perceive–decide–respond loop — a Large Audio Interaction Model (LAIM) — instead of separate per-task models. The framework covers the whole pipeline: stitching short clips into long interactions for data, chunk-level decision training with history review and comprehension-aware silence, and asynchronous FIFO inference that cuts first-frame latency by 4.5×.
 
 <p align="center">
-  <img src="assets/figures/radar_results.png" alt="Results" width="100%">
+  <img src="./assets/figures/soundflow.png" alt="SoundFlow framework" width="92%">
 </p>
 
+&nbsp;
 
-## <a id="how-it-works"></a>🧠 How it works: SoundFlow
+## <a id="finetuning"></a>🔧 Finetuning ** data samples are in /src/miniomni3/dataset/examples
 
-**Mini-Omni3** is trained with the **SoundFlow** framework, which reformulates long audio into chunked streaming sequences and supervises the model to predict both **linguistic content** and **intervention behavior** through dedicated control tokens. That dual objective is what bundles the four abilities into one policy: instead of only predicting *what was said*, the model also learns *whether this is a moment to stay `⟨Silent⟩` or to `⟨Speak⟩`* — enabling instruction following and audio-triggered proactive responses within a single streaming language-modeling loss.
+You can fine-tune Mini-Omni3 on your own streaming data, and you can also use this repository to train standard offline audio language models. There are two steps: build the training data, then train.
 
-The framework unifies long-form data construction, token-level temporal annotation, streaming-aware training, and low-latency inference — and supports training patterns well beyond transcription.
+### 1. Prepare training data
 
-<p align="center">
-  <img src="/docs/assets/training.png" alt="Mini-Omni3 Training" width="100%">
-</p>
+Edit the path constants at the top of each script first:
 
+| File | Constants to fill in |
+|---|---|
+| `src/mini_omni3/dataset/get_feat.py` | `QWEN_OMNI_CKPT`, `AUDIO_TOWER_CKPT` |
+| `src/mini_omni3/dataset/get_dataset_online.py` | `QWEN_OMNI_CKPT` |
+| `src/mini_omni3/dataset/get_dataset_offline.py` | `QWEN_OMNI_CKPT`, `AUDIO_TOWER_CKPT` |
 
-## <a id="finetuning"></a>🔧 Finetuning
+#### Input JSONL format
 
-You can fine-tune Mini-Omni3 on your own streaming scenarios and data, and you can also use this repository to train standard offline audio language models.
+**Online** (streaming, multi-turn audio). One JSON object per line:
 
-`src/MiniOmni3/SoundFlow` contains the core training code built around the SoundFlow framework.
-
-```text
-src/MiniOmni3/SoundFlow/
-├── arguments.py      # Defines command-line arguments and training hyperparameters.
-├── chunking.py       # Reformulates long audio into chunked streaming sequences.
-├── dataloader.py     # Loads JSONL data, reads audio, builds streaming inputs, masks non-target tokens.
-├── finetune.py       # Main entry point for launching SoundFlow training.
-├── modeling.py       # Loads the audio encoder + LLM and defines the streaming objective.
-├── trainer.py        # Defines the streaming-aware trainer with control-token supervision.
+```json
+{"conversation": [
+    {"audio_path": "/path/to/turn1.wav", "assistant": "reply 1", "emotion": "normal"},
+    {"audio_path": "/path/to/turn2.wav", "assistant": "reply 2", "emotion": "happy"}
+]}
 ```
 
-Training data is in JSONL format. Token-level temporal annotation lets the model learn intervention behavior (when to stay `⟨Silent⟩` vs. `⟨Speak⟩`):
+- `audio_path` and `assistant` are required on every turn.
+- `emotion` is optional and defaults to `"normal"`. Allowed values: `happy`, `sad`, `angry`, `surprise`, `normal`, `urgent`.
+- To make the model stay silent on a turn, set `assistant` to `"<no need to response>"`.
+
+A single-turn shorthand is also accepted:
+
+```json
+{"merge_path": "/path/to/audio.wav", "assistant": "reply", "emotion": "normal"}
+```
+
+**Offline** (single-turn). One JSON object per line, either the flat form:
+
+```json
+{"user": "user text", "assistant": "reply", "audio_path": "/path/to/audio.wav"}
+```
+
+or the online-style multi-turn shape, in which case only the **first** turn is used:
+
+```json
+{"conversation": [{"user": "...", "assistant": "...", "audio_path": "..."}, ...]}
+```
+
+`assistant` is always required. The task variant is decided by which other fields are present:
+
+| Has `audio_path`? | Has `user`? | Task |
+|:---:|:---:|---|
+| ✓ | ✓ | `A_T_T` — audio + user text → assistant |
+| ✓ |   | `A_T` — audio → assistant |
+|   | ✓ | `T_T` — user text → assistant |
+
+#### Data process
+
+```bash
+# Online: <input.jsonl> <output.jsonl> <error.log> <feature_dir>
+CUDA_VISIBLE_DEVICES=0 python src/mini_omni3/dataset/get_dataset_online.py \
+    <input.jsonl> <output.jsonl> <error.log> <feature_dir>
+# Example:
+# CUDA_VISIBLE_DEVICES=0 python src/mini_omni3/dataset/get_dataset_online.py \
+#     data/online_raw.jsonl data/online.jsonl logs/online.err features/online
+
+# Offline: <input.jsonl> <output.jsonl> <error.log> <feature_dir>
+CUDA_VISIBLE_DEVICES=0 python src/mini_omni3/dataset/get_dataset_offline.py \
+    <input.jsonl> <output.jsonl> <error.log> <feature_dir>
+# Example:
+# CUDA_VISIBLE_DEVICES=0 python src/mini_omni3/dataset/get_dataset_offline.py \
+#     data/offline_raw.jsonl data/offline.jsonl logs/offline.err features/offline
+```
+
+Both scripts are resumable: re-running picks up where the previous run stopped, skipping any `idx` that was already written. For a parallel multi-GPU template, see `src/mini_omni3/dataset/process_get_feature.sh`.
+
+### 2. Train
+
+```bash
+# 1. Set the two data roots referenced by config.yaml
+export DATA_ROOT=/path/to/your/jsonl/data
+export CHECKPOINT_ROOT=/path/to/your/checkpoints
+# Example:
+# export DATA_ROOT=/data/mini_omni3/jsonl
+# export CHECKPOINT_ROOT=/data/mini_omni3/ckpts
+
+# 2. Edit hyperparameters / data sources in src/mini_omni3/finetune/config.yaml
+
+# 3. Launch
+python src/mini_omni3/finetune/full.py --config src/mini_omni3/finetune/config.yaml
+# Example:
+# python src/mini_omni3/finetune/full.py --config src/mini_omni3/finetune/config.yaml
+```
+
+## <a id="datasets"></a>StreamAudio-2M: a large-scale stream audio instruction following corpus
+<p align="center">
+  <img src="./assets/figures/dataset.png" alt="SoundFlow framework" width="92%">
+</p>
+
+StreamAudio-2M is a ~2.6M-item streaming instruction-following corpus (7.4M rounds, 66.7K hours) covering seven capabilities — audio understanding, real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent — built by collecting clips from real-world datasets (AudioSet, CommonVoice, CoVoST2, MOSS, …), synthesizing text into speech with CosyVoice, then concatenating them into streaming sequences with environmental noise and token-level annotation.
+
+### Sample structure
+
+Each line is one streaming sequence made of multiple turns:
 
 ```json
 {
-  "audio": ".../wavs/stream/0001.wav",
-  "text": "task transcription<speak>THE TRANSCRIPT TEXT",
-  "prompt": ""
+  "id": "voice_chatting_000123",
+  "stream_scene_type": "Home Smart",
+  "num_turns": 2,
+  "turns": [
+    {
+      "user": "Turn the living room lights down a bit.",
+      "assistant": "Sure, dimming them to 40%.",
+      "emotion": "normal",
+      "scene_type": "Home Smart",
+      "audio_path": "voice_chatting/000123/turn_0.wav"
+    },
+    {
+      "user": "Thanks. What's the temperature in here?",
+      "assistant": "It's 22.5 degrees in the living room.",
+      "emotion": "normal",
+      "scene_type": "Home Smart",
+      "audio_path": "voice_chatting/000123/turn_1.wav"
+    }
+  ]
 }
 ```
 
-We can use the following command to start it.
-
-```bash
-torchrun --nproc_per_node=2 SoundFlow/finetune.py \
-  --model_path Mini-Omni3-Base --train_file ${TRAIN_JSONL} \
-  --eval_file ${VAL_JSONL} --output_dir ${OUT_DIR} \
-  --batch_size 8 --grad_acc 8 \
-  --lr 1e-6 --lr_encoder 1e-6 --lr_aligner 1e-6 --lr_llm 1e-6 \
-  --epochs 2 --save_steps 200 --save_total_limit 300 \
-  --chunk_ms 1000 --overlap_ms 200 --streaming 1 \
-  --warmup_ratio 0.05 --max_grad_norm 1.0 --weight_decay 0.01 \
-  --run_name ${RUN_NAME} --report_to wandb \
-  2>&1 | tee -a ${LOG_FILE}
-```
-
-
-## <a id="evaluation"></a>📊 Evaluation
-
-We provide a simple evaluation script for running Mini-Omni3 inference and computing streaming metrics (WER/CER for transcription, plus latency). The input file should be a JSONL file. Each line needs `audio` (or `audio_path`) plus `answer` as the ground-truth output:
-
-```json
-{"audio": "examples/audio/stream.wav", "answer": "I usually take the quieter road home because the main street gets crowded after work."}
-```
-
-The script keeps all original fields and appends the following to the output JSONL:
-
-```text
-prediction  # model output
-metric      # "wer" for English samples, "cer" for Chinese samples
-wer         # WER/CER score value; CER is also stored in this field for compatibility
-latency_ms  # average emit latency under streaming decoding
-num_edits   # edit distance between prediction and ground truth
-ref_len     # number of reference words or characters
-```
-
-**Offline metrics**
-```bash
-python src/MiniOmni3/eval/evaluate.py \
-  --ckpt_dir ckpt/Mini-Omni3 \
-  --input_jsonl examples/test.jsonl \
-  --output_jsonl outputs/pred_with_metrics.jsonl
-```
-
-**Streaming metrics** — measure incremental, low-latency performance under the FIFO mechanism:
-```bash
-python src/MiniOmni3/eval/evaluate_streaming.py \
-  --ckpt_dir ckpt/Mini-Omni3 \
-  --input_jsonl examples/test.jsonl \
-  --output_jsonl outputs/pred_with_metrics.streaming.jsonl \
-  --step_ms 1000 --overlap_sec 2
-```
-
-Mini-Omni3 is evaluated across both **standard offline audio benchmarks** and our **streaming-tailored analyses**, showing that moving from offline understanding to a fully streaming regime does not inherently sacrifice general capability.
-
-<p align="center">
-  <img src="/assets/tables/offline_benchmarks.png" alt="Mini-Omni3 Offline Results" width="100%">
-</p>
-
-<p align="center">
-  <img src="/assets/tables/streaming_breakdown.png" alt="Mini-Omni3 Streaming Results" width="100%">
-</p>
+Set `assistant` to `"<no need to response>"` for a turn where the model should stay silent.
 
 
 ## Acknowledgements
@@ -351,10 +354,3 @@ This project will be released under the **Apache-2.0 License**. You can do every
 }
 ```
 
-<a href="https://www.star-history.com/?repos=gpt-omni%2Fmini-omni%2Cmini-omni3%2FMini-Omni3&type=date&legend=bottom-right">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=gpt-omni/mini-omni%2Cmini-omni3/Mini-Omni3&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=gpt-omni/mini-omni%2Cmini-omni3/Mini-Omni3&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=gpt-omni/mini-omni%2Cmini-omni3/Mini-Omni3&type=date&legend=bottom-right" />
- </picture>
-</a>
