@@ -101,6 +101,9 @@ python infer_online.py
 
 # Use your own audio for offline testing:
 python infer_offline.py
+
+# Or try the three bundled sample sequences (set input_path in infer_offline.py to one of them):
+#   sample/01_count_bark/sequence.json, sample/02_translate/sequence.json, sample/03_cough_music/sequence.json
 ```
 
 

@@ -85,9 +85,9 @@ def _split_into_chunks(n: int, chunk_size: int) -> List[int]:
     return chunks
 
 
-def encode_audio_chunks(audio_path: str, audio_encoder: torch.nn.Module, device) -> List[torch.Tensor]:
-    """Run the audio_tower on `audio_path` and split the output into AUDIO_TOKENS_PER_CHUNK chunks."""
-    audio = whisper.load_audio(audio_path, sr=16000).tolist()
+def _encode_audio_samples(audio: List[float], audio_encoder: torch.nn.Module, device) -> List[torch.Tensor]:
+    """Run the audio_tower on raw 16 kHz samples and split the output into AUDIO_TOKENS_PER_CHUNK chunks."""
+    audio = list(audio)
     # Pad to a 0.4-s boundary (6400 samples @ 16 kHz).
     if len(audio) % 6400 != 0:
         audio += [0] * (6400 - len(audio) % 6400)
@@ -104,6 +104,16 @@ def encode_audio_chunks(audio_path: str, audio_encoder: torch.nn.Module, device)
     # Drop any trailing partial chunk so each chunk is exactly AUDIO_TOKENS_PER_CHUNK frames.
     keep = feat.shape[0] - feat.shape[0] % AUDIO_TOKENS_PER_CHUNK
     return [feat[i: i + AUDIO_TOKENS_PER_CHUNK] for i in range(0, keep, AUDIO_TOKENS_PER_CHUNK)]
+
+
+def encode_audio_chunks(audio_path: str, audio_encoder: torch.nn.Module, device) -> List[torch.Tensor]:
+    """Run the audio_tower on `audio_path` and split the output into AUDIO_TOKENS_PER_CHUNK chunks."""
+    audio = whisper.load_audio(audio_path, sr=16000).tolist()
+    return _encode_audio_samples(audio, audio_encoder, device)
+
+
+def encode_silence_chunks(seconds: float, audio_encoder: torch.nn.Module, device) -> List[torch.Tensor]:
+    return _encode_audio_samples([0.0] * int(seconds * 16000), audio_encoder, device)
 
 
 # === Streaming generation ===
@@ -270,19 +280,40 @@ def streaming_generate(
     input_pos_maxp1 = _init_input_pos_maxp1(model, prefix_ids.size(0), device)
 
     turns: List[List[int]] = []  # one inner list per assistant turn (across all rounds)
-    n_rounds = len(audio_paths) if audio_paths is not None else rounds
 
-    for round_idx in range(n_rounds):
-        if audio_paths is not None:
-            audio_path = audio_paths[round_idx]
+    if audio_paths is not None:
+        steps = []
+        for ap in audio_paths:
+            steps.append((ap, False))
+            steps.append((None, True))
+        n_real = len(audio_paths)
+    else:
+        steps = None
+        n_real = rounds
+
+    n_steps = len(steps) if steps is not None else rounds
+    real_idx = 0
+    acc_replied = 0
+    acc_silent = 0
+
+    for step_idx in range(n_steps):
+        if steps is not None:
+            audio_path, is_silence = steps[step_idx]
         else:
+            is_silence = False
             ui._clear_status()
             audio_path = input(
-                f"{ui.BOLD}Round {round_idx + 1}/{n_rounds}{ui.RESET} — enter audio path: "
+                f"{ui.BOLD}Round {real_idx + 1}/{n_real}{ui.RESET} — enter audio path: "
             ).strip()
 
-        audio_chunks = encode_audio_chunks(audio_path, audio_encoder, device)
-        ui.header(round_idx + 1, n_rounds, audio_path, len(audio_chunks))
+        if is_silence:
+            audio_chunks = encode_silence_chunks(1.0, audio_encoder, device)
+        else:
+            audio_chunks = encode_audio_chunks(audio_path, audio_encoder, device)
+            real_idx += 1
+            acc_replied = 0
+            acc_silent = 0
+            ui.header(real_idx, n_real, audio_path, len(audio_chunks))
 
         # Per-round counters for the progress line / summary.
         replied_chunks = 0
@@ -369,11 +400,14 @@ def streaming_generate(
                         if piece:
                             ui.reply_token(piece)
 
-        # End of this audio file — close any open reply line and print a tiny summary.
         if not listening and text_started:
             ui.reply_end()
             text_started = False
-        ui.round_summary(replied_chunks, silent_chunks, replied_chunks + silent_chunks)
+
+        acc_replied += replied_chunks
+        acc_silent += silent_chunks
+        if steps is None or is_silence:
+            ui.round_summary(acc_replied, acc_silent, acc_replied + acc_silent)
 
     ui.finish()
     return turns

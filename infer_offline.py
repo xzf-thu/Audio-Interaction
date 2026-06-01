@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import List, Optional
 
 import lightning as L
@@ -61,15 +63,43 @@ def run_inference(
                 model, audio_encoder, tokenizer, prefix_ids,
                 rounds=rounds, audio_paths=audio_paths,
                 max_returned_tokens=max_new_tokens,
+                temperature=0.0, top_p=0.0,  # greedy/argmax → deterministic output
             )
     finally:
         model.clear_kv_cache()
 
-audio_paths = [
-    "path1",
-]
+def load_audio_paths(input_path: str) -> List[str]:
+    """Resolve `input_path` into an ordered list of audio files.
 
-run_inference(checkpoint_dir="./checkpoints", 
+    Accepts either a single audio file (returned as a one-element list), or a
+    .json file containing a plain list of path strings, e.g.:
+
+        ["a.wav", "b.wav", "c.wav"]
+
+    The files are fed sequentially into a single offline session (pseudo-online:
+    context accumulates across files). Relative paths inside the JSON are
+    resolved against the JSON file's directory.
+    """
+    p = Path(input_path)
+    if p.suffix.lower() != ".json":
+        return [input_path]
+
+    with open(p, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, list):
+        raise ValueError(f"Expected a JSON list of audio paths in {input_path}, got {type(data).__name__}.")
+
+    base_dir = p.parent
+    return [str(base_dir / a) if not Path(a).is_absolute() else a for a in data]
+
+
+# A single audio file, or a .json listing multiple audios, e.g. ["a.wav", "b.wav"].
+# You can also point this at one of the bundled sample sequences, e.g.
+#   sample/01_count_bark/sequence.json, sample/02_translate/sequence.json, sample/03_cough_music/sequence.json
+input_path = "path1"
+audio_paths = load_audio_paths(input_path)
+
+run_inference(checkpoint_dir="./checkpoints",
     audio_paths=audio_paths,
-    device=get_best_device(), 
+    device=get_best_device(),
 )
