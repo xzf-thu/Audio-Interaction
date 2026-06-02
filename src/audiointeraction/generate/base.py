@@ -25,12 +25,12 @@ import numpy as np
 import torch
 import whisper
 
-from src.miniomni3.dataset.TOKENS import (
+from src.audiointeraction.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, KEEP_SILENCE, PAD, TEXT_BEGIN, TEXT_END,
     HAPPY, SAD, ANGRY, SURPRISE, NORMAL, URGENT,
 )
-from src.miniomni3.model import GPT
-from src.miniomni3.tokenizer import Tokenizer
+from src.audiointeraction.model import GPT
+from src.audiointeraction.tokenizer import Tokenizer
 
 
 # Encoder-output frames per [AUDIO_BEGIN, PAD*N, ASSISTANT, ...] block.

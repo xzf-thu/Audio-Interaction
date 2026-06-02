@@ -3,9 +3,9 @@
 import logging
 import re
 
-from src.miniomni3.model import GPT  # needs to be imported before config
-from src.miniomni3.config import Config
-from src.miniomni3.tokenizer import Tokenizer
+from src.audiointeraction.model import GPT  # needs to be imported before config
+from src.audiointeraction.config import Config
+from src.audiointeraction.tokenizer import Tokenizer
 
 # Suppress excessive warnings, see https://github.com/pytorch/pytorch/issues/111632
 pattern = re.compile(".*Profiler function .* will be ignored")

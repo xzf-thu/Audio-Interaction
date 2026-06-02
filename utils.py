@@ -6,9 +6,9 @@ import torch
 from transformers import AutoConfig
 from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import Qwen2_5OmniAudioEncoder
 
-from src.miniomni3.generate.base import AUDIO_TOKENS_PER_CHUNK  # noqa: F401  (re-export for callers)
-from src.miniomni3.model import GPT, Config
-from src.miniomni3.utils import load_checkpoint
+from src.audiointeraction.generate.base import AUDIO_TOKENS_PER_CHUNK  # noqa: F401  (re-export for callers)
+from src.audiointeraction.model import GPT, Config
+from src.audiointeraction.utils import load_checkpoint
 
 
 def set_seed(seed: int = 1337) -> None:
@@ -77,8 +77,8 @@ def resolve_checkpoint_paths(checkpoint_dir: str):
 
         <checkpoint_dir>/
             model_config.yaml + tokenizer.json + ...   ← model_config_dir = root
-            MiniOmni3_LM.pt
-            MiniOmni3_ChunkwisedEncoder.pth
+            audiointeraction_LM.pt
+            audiointeraction_ChunkwisedEncoder.pth
             qwen_2_5_omni_config/
     """
 
@@ -87,7 +87,7 @@ def resolve_checkpoint_paths(checkpoint_dir: str):
         str(ckpt),
         str(ckpt),
         str(ckpt / "qwen25OmniConfig"),
-        str(ckpt / "MiniOmni3_ChunkwisedEncoder.pth"),
+        str(ckpt / "audiointeraction_ChunkwisedEncoder.pth"),
     )
 
 def get_best_device():

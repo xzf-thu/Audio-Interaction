@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from typing_extensions import Self
 import whisper
 from transformers import Qwen2AudioEncoder, Qwen2AudioConfig
-from src.miniomni3.config import Config
+from src.audiointeraction.config import Config
 
 
 def qkv_reassemble(

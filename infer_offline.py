@@ -5,13 +5,13 @@ from typing import List, Optional
 import lightning as L
 import torch
 
-from src.miniomni3.dataset.TOKENS import ENGLISH, ONLINE, SYSTEM, TEXT_BEGIN, TEXT_END
-from src.miniomni3.generate.base import streaming_generate
+from src.audiointeraction.dataset.TOKENS import ENGLISH, ONLINE, SYSTEM, TEXT_BEGIN, TEXT_END
+from src.audiointeraction.generate.base import streaming_generate
 from utils import (
     load_audio_encoder, load_model, resolve_checkpoint_paths, set_seed, get_best_device
 )
-from src.miniomni3.tokenizer import Tokenizer
-from src.miniomni3.utils import get_default_supported_precision
+from src.audiointeraction.tokenizer import Tokenizer
+from src.audiointeraction.utils import get_default_supported_precision
 
 
 SYSTEM_PROMPT = (
@@ -96,7 +96,7 @@ def load_audio_paths(input_path: str) -> List[str]:
 # A single audio file, or a .json listing multiple audios, e.g. ["a.wav", "b.wav"].
 # You can also point this at one of the bundled sample sequences, e.g.
 #   sample/01_count_bark/sequence.json, sample/02_translate/sequence.json, sample/03_cough_music/sequence.json
-input_path = "path1"
+input_path = "sample/01_count_bark/sequence.json"
 audio_paths = load_audio_paths(input_path)
 
 run_inference(checkpoint_dir="./checkpoints",

@@ -1,11 +1,11 @@
-# Mini-Omni3: Towards Unified Audio Interaction Model
+# AudioInteraction: Towards Unified Audio Interaction Model
 
 <p align="center">
-  <img src="assets/figures/top.png" alt="Mini-Omni3 Logo" width="100%">
+  <img src="assets/figures/top.png" alt="AudioInteraction Logo" width="100%">
 </p>
 
 Today's Large Audio Language Models (LALMs) are stuck in an offline paradigm: you hand them a complete audio clip, wait, and get a reply. Streaming audio models exist, but each one only handles a single, isolated task. There has never been a general streaming audio language model. We formalize that missing capability as a new concept **the Audio Interaction Model** and build the first one.
-Mini-Omni3 is a unified Audio Interaction Model that:
+AudioInteraction is a unified Audio Interaction Model that:
 
 ✅ Runs conventional offline audio tasks (ASR, S2TT, AQA...)
 
@@ -18,22 +18,22 @@ Mini-Omni3 is a unified Audio Interaction Model that:
 
 <p align="center">
   <a href="https://arxiv.org/abs/2605.XXXXX">Technical Report 📖</a> /
-  <a href="https://huggingface.co/datasets/mini-omni3/SoundFlow-260K">StreamAudio-2M 🤗</a> /
-  <a href="https://huggingface.co/mini-omni3/Mini-Omni3">Mini-Omni3 Model 🤗</a> /
-  <a href="https://github.com/mini-omni3/Streaming-Audio-Bench">Streaming-Audio-Bench 🏆</a>
+  <a href="https://huggingface.co/datasets/AudioInteraction/SoundFlow-260K">StreamAudio-2M 🤗</a> /
+  <a href="https://huggingface.co/AudioInteraction/AudioInteraction">AudioInteraction Model 🤗</a> /
+  <a href="https://github.com/AudioInteraction/Streaming-Audio-Bench">Streaming-Audio-Bench 🏆</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/mini-omni3/Mini-Omni3/raw/main/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-Join%20Group-07C160?logo=wechat&logoColor=white" alt="WeChat"></a>&nbsp;<a href="https://mini-omni3.github.io/"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>&nbsp;<a href="https://x.com/"><img src="https://img.shields.io/badge/X-@MiniOmni3-black?logo=x&logoColor=white" alt="X"></a>
+  <a href="https://github.com/AudioInteraction/AudioInteraction/raw/main/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-Join%20Group-07C160?logo=wechat&logoColor=white" alt="WeChat"></a>&nbsp;<a href="https://AudioInteraction.github.io/"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>&nbsp;<a href="https://x.com/"><img src="https://img.shields.io/badge/X-@audiointeraction-black?logo=x&logoColor=white" alt="X"></a>
 </p>
 
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=r1S4xiUBg9s">
-    <img src="https://img.youtube.com/vi/r1S4xiUBg9s/maxresdefault.jpg" alt="Watch Mini-Omni3 running live" width="95%">
+    <img src="https://img.youtube.com/vi/r1S4xiUBg9s/maxresdefault.jpg" alt="Watch AudioInteraction running live" width="95%">
   </a>
 </p>
-<p align="center"><em>▶ Click to watch Mini-Omni3 listen, decide, and speak — live (YouTube)</em></p>
+<p align="center"><em>▶ Click to watch AudioInteraction listen, decide, and speak — live (YouTube)</em></p>
 
 
 
@@ -44,9 +44,9 @@ Mini-Omni3 is a unified Audio Interaction Model that:
 
 
 - **May 20, 2026**: 🔥 We release **StreamAudio-2M**.
-- **May 20, 2026**: 🔥 We release the **Mini-Omni3 Inference and Training Codebase**.
-- **May 19, 2026**: 🔥 **Mini-Omni3** model weights are now available on Hugging Face.
-- **May 19, 2026**: 🔥 We release the **Mini-Omni3 Technical Report**.
+- **May 20, 2026**: 🔥 We release the **AudioInteraction Inference and Training Codebase**.
+- **May 19, 2026**: 🔥 **AudioInteraction** model weights are now available on Hugging Face.
+- **May 19, 2026**: 🔥 We release the **AudioInteraction Technical Report**.
 
 
 ## Contents
@@ -61,15 +61,15 @@ Mini-Omni3 is a unified Audio Interaction Model that:
 
 ## <a id="quick-start"></a>⚡ Quick Start
 
-Mini-Omni3 is an always-on model: it keeps listening to incoming audio frames and **decides for itself when to speak**. By default it stays in a `⟨Silent⟩` state and only emits output when the task or the acoustic context warrants it — so you can open a single session, stream audio into it continuously, and watch every capability take turns on its own.
+AudioInteraction is an always-on model: it keeps listening to incoming audio frames and **decides for itself when to speak**. By default it stays in a `⟨Silent⟩` state and only emits output when the task or the acoustic context warrants it — so you can open a single session, stream audio into it continuously, and watch every capability take turns on its own.
 
 **Installation**
 ```bash
-git clone https://github.com/mini-omni3/Mini-Omni3.git
-cd Mini-Omni3
+git clone https://github.com/AudioInteraction/AudioInteraction.git
+cd AudioInteraction
 
-conda create -n mini-omni3 python=3.12 -y
-conda activate mini-omni3
+conda create -n AudioInteraction python=3.12 -y
+conda activate AudioInteraction
 # please check if you are using torch-cuda
 pip install -r requirements.txt
 # install ffmpeg
@@ -109,7 +109,7 @@ python infer_offline.py
 
 ## <a id="demos"></a>🎬 Demos
 
-Most audio models do one job and wait to be asked. Mini-Omni3's defining trait is that **all of its abilities live in the same continuous stream**, and the model itself decides which one is needed at each moment. The demo below is **one unbroken session, one model, no mode switches, no prompts** — transcription, understanding, conversation, and proactive intervention simply happen as the soundscape changes.
+Most audio models do one job and wait to be asked. AudioInteraction's defining trait is that **all of its abilities live in the same continuous stream**, and the model itself decides which one is needed at each moment. The demo below is **one unbroken session, one model, no mode switches, no prompts** — transcription, understanding, conversation, and proactive intervention simply happen as the soundscape changes.
 
 <div align="center">
   <video src="assets/demo/all_in_one_session.mp4" controls width="320"></video>
@@ -124,7 +124,7 @@ Most audio models do one job and wait to be asked. Mini-Omni3's defining trait i
     <th valign="top">gpt-audio</th>
     <th valign="top">doubao-voicechat</th>
     <th valign="top">gemini-omni</th>
-    <th valign="top">Mini-Omni3 (Ours)</th>
+    <th valign="top">AudioInteraction (Ours)</th>
   </tr>
   <tr>
     <td valign="top">Continuous ambient audio: footsteps, a door opening, distant traffic.</td>
@@ -148,7 +148,7 @@ Most audio models do one job and wait to be asked. Mini-Omni3's defining trait i
     <th valign="top">gpt-audio</th>
     <th valign="top">doubao-voicechat</th>
     <th valign="top">gemini-omni</th>
-    <th valign="top">Mini-Omni3 (Ours)</th>
+    <th valign="top">AudioInteraction (Ours)</th>
   </tr>
   <tr>
     <td valign="top">A speaker talking continuously while the model listens.</td>
@@ -167,7 +167,7 @@ Most audio models do one job and wait to be asked. Mini-Omni3's defining trait i
     <th valign="top">gpt-audio</th>
     <th valign="top">doubao-voicechat</th>
     <th valign="top">gemini-omni</th>
-    <th valign="top">Mini-Omni3 (Ours)</th>
+    <th valign="top">AudioInteraction (Ours)</th>
   </tr>
   <tr>
     <td valign="top">A user asks about a song playing in the background while talking.</td>
@@ -186,7 +186,7 @@ Most audio models do one job and wait to be asked. Mini-Omni3's defining trait i
     <th valign="top">gpt-audio</th>
     <th valign="top">doubao-voicechat</th>
     <th valign="top">gemini-omni</th>
-    <th valign="top">Mini-Omni3 (Ours)</th>
+    <th valign="top">AudioInteraction (Ours)</th>
   </tr>
   <tr>
     <td valign="top">A smoke alarm starts beeping while the user is silent.</td>
@@ -210,9 +210,9 @@ Offline audio models answer a finished clip, but real audio needs a model that l
 
 &nbsp;
 
-## <a id="finetuning"></a>🔧 Finetuning ** data samples are in /src/miniomni3/dataset/examples
+## <a id="finetuning"></a>🔧 Finetuning ** data samples are in /src/audiointeraction/dataset/examples
 
-You can fine-tune Mini-Omni3 on your own streaming data, and you can also use this repository to train standard offline audio language models. There are two steps: build the training data, then train.
+You can fine-tune AudioInteraction on your own streaming data, and you can also use this repository to train standard offline audio language models. There are two steps: build the training data, then train.
 
 ### 1. Prepare training data
 
@@ -346,21 +346,21 @@ We sincerely thank the creators, maintainers, and contributors of the public dat
 
 In particular, this project builds on the following open-source repositories:
 
-- [Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni) — the audio encoder and language model backbone behind Mini-Omni3.
+- [Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni) — the audio encoder and language model backbone behind AudioInteraction.
 - [LitGPT](https://github.com/Lightning-AI/litgpt) — the training framework our finetuning code is built on.
 - [CosyVoice](https://github.com/FunAudioLLM/CosyVoice) — the text-to-speech model used to synthesize speech during data construction.
 
 
 ## <a id="citation"></a>License, Citation & Stars
 
-This project will be released under the **Apache-2.0 License**. You can do everything with Mini-Omni3 🎉
+This project will be released under the **Apache-2.0 License**. You can do everything with AudioInteraction 🎉
 
-**Citation**: You can cite Mini-Omni3 using the following BibTeX entry. Thank you for your kindness 🙂
+**Citation**: You can cite AudioInteraction using the following BibTeX entry. Thank you for your kindness 🙂
 
 ```bibtex
-@misc{miniomni3,
-      title={Mini-Omni3: An Always-On Streaming Audio Language Model for the Real World},
-      author={Mini-Omni3 Team},
+@misc{audiointeraction,
+      title={AudioInteraction: An Always-On Streaming Audio Language Model for the Real World},
+      author={AudioInteraction Team},
       year={2026},
       eprint={2605.XXXXX},
       archivePrefix={arXiv},
@@ -369,10 +369,10 @@ This project will be released under the **Apache-2.0 License**. You can do every
 }
 ```
 
-<a href="https://www.star-history.com/?repos=xzf-thu%2FMini-Omni3&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=xzf-thu%2FAudioInteraction&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=xzf-thu/Mini-Omni3&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=xzf-thu/AudioInteraction&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=xzf-thu/AudioInteraction&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=xzf-thu/AudioInteraction&type=date&legend=top-left" />
  </picture>
 </a>

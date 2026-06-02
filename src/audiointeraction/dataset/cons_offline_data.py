@@ -21,19 +21,19 @@ import torch
 from tqdm import tqdm
 from transformers import AutoConfig, Qwen2_5OmniForConditionalGeneration
 
-from src.miniomni3.dataset.utils.load_audio import _load_mel
-from src.miniomni3.dataset.TOKENS import (
+from src.audiointeraction.dataset.utils.load_audio import _load_mel
+from src.audiointeraction.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, AUDIO_END, AUDIO_PAD, ENGLISH, MASK,
     OFFLINE, SYSTEM, TEXT_BEGIN, TEXT_END, USER,
 )
-from src.miniomni3.generate.base import resolve_checkpoint_paths
-from src.miniomni3.tokenizer import Tokenizer
+from src.audiointeraction.generate.base import resolve_checkpoint_paths
+from src.audiointeraction.tokenizer import Tokenizer
 
 
 # ============================================================
 # Fill these in before running.
 # ============================================================
-CHECKPOINT_DIR = ""   # checkpoint root (tokenizer + qwen_2_5_omni_config + MiniOmni3_ChunkwisedEncoder.pth)
+CHECKPOINT_DIR = ""   # checkpoint root (tokenizer + qwen_2_5_omni_config + audiointeraction_ChunkwisedEncoder.pth)
 INPUT_JSONL    = ""   # raw input jsonl
 OUTPUT_JSONL   = ""   # training-ready output jsonl
 ERROR_LOG      = ""   # path to append per-sample error messages

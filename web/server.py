@@ -1,4 +1,4 @@
-"""Mini-Omni3 streaming web backend.
+"""AudioInteraction streaming web backend.
 
 Per-frame flow:
     frontend mic --[400ms int16 mono PCM @ 16kHz]--> POST /audio
@@ -40,18 +40,18 @@ import torch
 import whisper
 from flask import Flask, Response, request, send_from_directory
 
-from src.miniomni3.dataset.TOKENS import (
+from src.audiointeraction.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
     SYSTEM, TEXT_BEGIN, TEXT_END,
     HAPPY, SAD, ANGRY, SURPRISE, NORMAL, URGENT,
 )
-from src.miniomni3.generate.base import (
+from src.audiointeraction.generate.base import (
     AUDIO_TOKENS_PER_CHUNK, SYSTEM_PROMPT,
      sample
 )
 from utils import load_audio_encoder, load_model, resolve_checkpoint_paths, set_seed
-from src.miniomni3.tokenizer import Tokenizer
-from src.miniomni3.utils import get_default_supported_precision
+from src.audiointeraction.tokenizer import Tokenizer
+from src.audiointeraction.utils import get_default_supported_precision
 
 
 # Single source of truth for all weights — see README for the expected layout.
@@ -478,11 +478,11 @@ if __name__ == "__main__":
     RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
     print("[boot] creating inference session")
     session = InferenceSession()
-    print(f"Mini-Omni3 backend on http://{HOST}:{PORT}")
+    print(f"AudioInteraction backend on http://{HOST}:{PORT}")
     app.run(host=HOST, port=PORT, threaded=True, debug=False)
 
 
-# """Mini-Omni3 streaming web backend.
+# """AudioInteraction streaming web backend.
 
 # Per-frame flow:
 #     frontend mic --[400ms int16 mono PCM @ 16kHz]--> POST /audio
@@ -524,18 +524,18 @@ if __name__ == "__main__":
 # import whisper
 # from flask import Flask, Response, request, send_from_directory
 
-# from src.miniomni3.dataset.TOKENS import (
+# from src.audiointeraction.dataset.TOKENS import (
 #     ASSISTANT, AUDIO_BEGIN, ENGLISH, KEEP_SILENCE, ONLINE, PAD,
 #     SYSTEM, TEXT_BEGIN, TEXT_END,
 #     HAPPY, SAD, ANGRY, SURPRISE, NORMAL, URGENT,
 # )
-# from src.miniomni3.generate.base import (
+# from src.audiointeraction.generate.base import (
 #     AUDIO_TOKENS_PER_CHUNK, SYSTEM_PROMPT,
 #      sample
 # )
 # from utils import load_audio_encoder, load_model, resolve_checkpoint_paths, set_seed
-# from src.miniomni3.tokenizer import Tokenizer
-# from src.miniomni3.utils import get_default_supported_precision
+# from src.audiointeraction.tokenizer import Tokenizer
+# from src.audiointeraction.utils import get_default_supported_precision
 
 
 # # Single source of truth for all weights — see README for the expected layout.
@@ -971,5 +971,5 @@ if __name__ == "__main__":
 #     RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
 #     print("[boot] creating inference session")
 #     session = InferenceSession()
-#     print(f"Mini-Omni3 backend on http://{HOST}:{PORT}")
+#     print(f"AudioInteraction backend on http://{HOST}:{PORT}")
 #     app.run(host=HOST, port=PORT, threaded=True, debug=False)

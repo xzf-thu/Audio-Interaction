@@ -26,20 +26,20 @@ import soundfile as sf
 import whisper
 from tqdm import tqdm
 
-from src.miniomni3.dataset.utils.extract_online_feature import extract_audio_features
-from src.miniomni3.dataset.utils.load_audio import SAMPLES_PER_FRAME, _load_mel
-from src.miniomni3.dataset.TOKENS import (
+from src.audiointeraction.dataset.utils.extract_online_feature import extract_audio_features
+from src.audiointeraction.dataset.utils.load_audio import SAMPLES_PER_FRAME, _load_mel
+from src.audiointeraction.dataset.TOKENS import (
     ASSISTANT, AUDIO_BEGIN, EMOTION_TO_ID, ENGLISH, KEEP_SILENCE, MASK,
     NORMAL, ONLINE, PAD, SYSTEM, TEXT_BEGIN, TEXT_END,
 )
-from src.miniomni3.generate.base import resolve_checkpoint_paths
-from src.miniomni3.tokenizer import Tokenizer
+from src.audiointeraction.generate.base import resolve_checkpoint_paths
+from src.audiointeraction.tokenizer import Tokenizer
 
 
 # ============================================================
 # Fill these in before running.
 # ============================================================
-CHECKPOINT_DIR  = ""    # checkpoint root (tokenizer + qwen_2_5_omni_config + MiniOmni3_ChunkwisedEncoder.pth)
+CHECKPOINT_DIR  = ""    # checkpoint root (tokenizer + qwen_2_5_omni_config + audiointeraction_ChunkwisedEncoder.pth)
 INPUT_JSONL     = ""    # user-supplied raw jsonl
 WORK_DIR        = ""    # holds intermediate step1/2/3 jsonls + wavs/ + features/
 OUT_TRAIN_JSONL = ""    # final training-ready jsonl
