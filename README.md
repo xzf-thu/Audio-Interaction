@@ -1,4 +1,4 @@
-# AudioInteraction: Towards Unified Audio Interaction Model
+# Audio-Interaction: Towards Unified Audio Interaction Model
 
 <p align="center">
   <img src="assets/figures/top.png" alt="AudioInteraction Logo" width="100%">
