@@ -1,6 +1,10 @@
 # Audio Interaction Model
 
 <p align="center">
+  <b>English</b> | <a href="README_ZH.md">简体中文</a>
+</p>
+
+<p align="center">
   <img src="assets/figures/top.png" alt="AudioInteraction Logo" width="100%">
 </p>
 
