@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AudioInteraction: A Unified Audio Interaction Model</title>
+<title>Audio-Interaction: A Unified Audio Interaction Model</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -54,11 +54,11 @@
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
 
-  .page { max-width: 940px; margin: 0 auto; padding: 28px 40px 28px; }
+  .page { max-width: 940px; margin: 0 auto; padding: 60px 40px 28px; }
   @media (min-width: 1280px) { .page { padding-left: 64px; padding-right: 64px; } }
 
   /* ----------------- Header / Title ----------------- */
-  header.title-block { text-align:center; padding:8px 0 4px; }
+  header.title-block { text-align:center; padding:26px 0 4px; }
 
   h1.paper-title { font-family:'Crimson Pro', Georgia, serif; font-weight:600; margin:0 auto; max-width:1000px; color:var(--ink); letter-spacing:-0.01em; }
   .paper-name {
@@ -85,6 +85,20 @@
     font-size:clamp(16px,1.4vw,19px); color:var(--ink-soft); line-height:1.3; padding:0 8px;
   }
   .mission-line strong { color:var(--accent2); font-style:normal; font-weight:700; }
+  .open-badge {
+    display:inline-flex; align-items:center; gap:5px; vertical-align:middle;
+    margin-right:9px; padding:3px 11px 4px; border-radius:999px;
+    font-family:'Inter', system-ui, sans-serif; font-style:normal;
+    font-size:11px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase;
+    color:#fff; background:linear-gradient(120deg, var(--accent2) 0%, #f9a03f 100%);
+    box-shadow:0 1px 3px rgba(234,115,23,0.30);
+    position:relative; top:-1px;
+  }
+  .open-badge::before {
+    content:""; width:6px; height:6px; border-radius:50%; background:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,0.35); animation:open-badge-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes open-badge-pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
 
   .authors {
     text-align:center; margin-top:6px; font-family:'Crimson Pro', Georgia, serif;
@@ -192,29 +206,17 @@
   .stat-pill:nth-child(2) .value, .stat-pill:nth-child(4) .value { color:var(--accent2); }
   .stat-pill .label { margin-top:4px; font-size:12px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.08em; font-weight:500; }
 
-  /* ----------------- Results slider (title + body per slide) ----------------- */
-  .results-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:0 auto 22px; padding:6px; background:var(--bg-soft); border:1px solid var(--rule); border-radius:14px; width:fit-content; max-width:100%; font-family:'Inter', system-ui, sans-serif; }
-  .tab-btn { appearance:none; -webkit-appearance:none; border:none; background:transparent; color:var(--ink-soft); font-family:inherit; font-size:15px; font-weight:600; padding:11px 22px; border-radius:10px; cursor:pointer; transition: background .2s ease, color .2s ease, box-shadow .2s ease; white-space:nowrap; }
-  .tab-btn:hover { color:var(--ink); }
-  .tab-btn.active { background:#fff; color:var(--accent); box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06); }
-
-  .results-stage { position:relative; margin:0 auto; width:90%; overflow:hidden; border:1px solid var(--rule); border-radius:14px; background:#fff; box-shadow:0 2px 14px rgba(0,0,0,0.04); }
-  .results-track { display:flex; width:300%; transition: transform .55s cubic-bezier(0.22,0.61,0.36,1); will-change:transform; }
-  .results-panel { flex:0 0 calc(100% / 3); padding:26px 28px 24px; display:flex; flex-direction:column; }
-  .results-panel .panel-eyebrow { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin:0 0 8px; }
-  .results-panel .panel-title { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:24px; color:var(--ink); margin:0 0 8px; line-height:1.2; }
-  .results-panel .panel-body { font-family:'Inter', system-ui, sans-serif; font-size:15px; color:var(--ink-soft); line-height:1.55; margin:0 0 18px; max-width:760px; }
-  .results-panel.proactive .panel-eyebrow, .results-panel.proactive .panel-title { color:var(--accent2); }
-  .results-panel img { display:block; width:100%; height:auto; border-radius:10px; border:1px solid var(--rule); }
-  .results-panel .panel-placeholder { width:100%; aspect-ratio:16/8; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f7f8fa 0%,#eef0f4 100%); color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.06em; border-radius:10px; }
-
-  .results-stage .nav-arrow { position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:999px; background:rgba(255,255,255,0.96); border:1px solid var(--rule); color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,0,0,0.08); transition: transform .18s ease, background .18s ease; z-index:3; }
-  .results-stage .nav-arrow:hover { transform:translateY(-50%) scale(1.06); background:#fff; }
-  .results-stage .nav-arrow.prev { left:14px; } .results-stage .nav-arrow.next { right:14px; }
-  .results-stage .nav-arrow svg { width:18px; height:18px; }
-  .results-dots { display:flex; justify-content:center; gap:8px; margin:18px auto 0; }
-  .results-dots .dot { width:8px; height:8px; border-radius:999px; background:var(--rule-strong); cursor:pointer; transition: background .2s ease, transform .2s ease; border:none; padding:0; }
-  .results-dots .dot.active { background:var(--accent); transform:scale(1.25); }
+  /* ----------------- Results: stacked cards ----------------- */
+  /* stacked result cards (replaces the old slider) */
+  .results-stack { display:flex; flex-direction:column; gap:22px; width:90%; margin:0 auto; }
+  .result-card { border:1px solid var(--rule); border-radius:14px; background:#fff; box-shadow:0 2px 14px rgba(0,0,0,0.04); padding:26px 28px 24px; }
+  .result-card .panel-eyebrow { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin:0 0 8px; }
+  .result-card .panel-title { font-family:'Crimson Pro', Georgia, serif; font-weight:700; font-size:24px; color:var(--ink); margin:0 0 8px; line-height:1.2; }
+  .result-card .panel-body { font-family:'Inter', system-ui, sans-serif; font-size:15px; color:var(--ink-soft); line-height:1.55; margin:0 0 18px; max-width:760px; }
+  .result-card.proactive .panel-eyebrow, .result-card.proactive .panel-title { color:var(--accent2); }
+  .result-card img { display:block; width:100%; height:auto; border-radius:10px; border:1px solid var(--rule); }
+  .result-card .panel-placeholder { width:100%; aspect-ratio:16/8; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f7f8fa 0%,#eef0f4 100%); color:var(--ink-mute); font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.06em; border-radius:10px; }
+  @media (max-width:720px){ .results-stack{ width:100%; } .result-card{ padding:18px 16px; } .result-card .panel-title{ font-size:21px; } }
 
   /* ----------------- Experience (mountain) sits right under Results ----------------- */
   section.experience { margin-top:8px; width:100vw; position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; }
@@ -250,16 +252,61 @@
 
   /* ----------------- Responsive ----------------- */
   @media (max-width:720px) {
-    .page { padding:20px 18px 20px; }
+    .page { padding:44px 18px 20px; }
     .authors { font-size:15px; word-spacing:0.25em; } .affiliations { font-size:13px; }
     .pill { font-size:14px; padding:9px 14px; }
     .paper-abstract { font-size:15px; text-align:left; }
-    .hero img, .hero .hero-fallback, .big-figure, .figure-caption, .video-wrap, .results-stage { width:100%; }
+    .hero img, .hero .hero-fallback, .big-figure, .figure-caption, .video-wrap, .results-stack { width:100%; }
     .figure-caption { font-size:16px; text-align:left; }
     .stat-pill { min-width:104px; padding:10px 16px; } .stat-pill .value { font-size:22px; }
-    .tab-btn { padding:9px 14px; font-size:13.5px; }
-    .results-panel { padding:18px 16px 18px; } .results-panel .panel-title { font-size:21px; }
     .mountain-stage, .mountain-content { min-height:560px; } .mountain-content { padding:60px 20px 80px; }
+  }
+
+  /* ----------------- Cursor glow + ripples (GPU-only, low CPU) ----------------- */
+  /* No backdrop-filter / mask: just a soft radial gradient moved by transform,
+     so the whole thing lives on the compositor and barely touches the CPU. */
+  #cursor-glow {
+    position: fixed; top: 0; left: 0;
+    width: 360px; height: 360px;
+    margin: -180px 0 0 -180px;            /* centre on the translate origin */
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0;
+    background: radial-gradient(circle at center,
+      rgba(255,182,92,0.16) 0%,
+      rgba(255,200,128,0.10) 32%,
+      rgba(255,224,176,0.04) 56%,
+      rgba(255,255,255,0) 72%);
+    transform: translate3d(-9999px, -9999px, 0);
+    transition: opacity 0.4s ease;        /* only opacity transitions; position is rAF-driven */
+    will-change: transform;
+  }
+
+  .cursor-ripple {
+    position: fixed; top: 0; left: 0;
+    width: 22px; height: 22px;
+    margin: -11px 0 0 -11px;              /* centre on the pointer */
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 59;
+    border: 1.5px solid rgba(255,176,80,0.32);
+    opacity: 0;
+    /* position carried in CSS vars so the keyframes can own `transform` */
+    transform: translate3d(var(--x,-9999px), var(--y,-9999px), 0) scale(0.3);
+    will-change: transform, opacity;
+  }
+  .cursor-ripple.go { animation: cursor-ripple-spread 0.8s ease-out forwards; }
+  /* animate ONLY transform + opacity (both compositor props -> no repaint) */
+  @keyframes cursor-ripple-spread {
+    0%   { opacity: 0.45; transform: translate3d(var(--x), var(--y), 0) scale(0.3); }
+    100% { opacity: 0;    transform: translate3d(var(--x), var(--y), 0) scale(2.3); }
+  }
+
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    #cursor-glow { display: none; }
+    .cursor-ripple { display: none; }
+  }
   }
 </style>
 </head>
@@ -278,13 +325,13 @@
     <h1 class="paper-title">
       <span class="title-rule title-rule-top"></span>
       <span class="paper-fulltitle" data-i18n="paperTitle">
-        <span class="paper-name">AudioInteraction:</span> Towards Unified Audio Interaction Models<br/>
+        <span class="paper-name">Audio-Interaction:</span> Towards Unified Audio Interaction Models<br/>
         that Continuously Perceive, Decide and Respond
       </span>
       <span class="title-rule title-rule-bottom"></span>
     </h1>
 
-    <p class="mission-line" data-i18n="missionLine">The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.</p>
+    <p class="mission-line" data-i18n="missionLine"><span class="open-badge">Fully Open</span>The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.</p>
 
     <p class="authors" data-i18n="authors">
       <span class="name">Zhifei Xie</span><sup>1*</sup>,
@@ -303,13 +350,13 @@
 
     <!-- ===================== HERO (top.png) ===================== -->
     <div class="hero">
-      <img src="figures/top.png" alt="AudioInteraction teaser"
+      <img src="figures/top.png" alt="Audio-Interaction teaser"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
       <div class="hero-fallback">figures/top.png</div>
     </div>
 
     <!-- ===================== ABSTRACT ===================== -->
-    <p class="paper-abstract" data-i18n="paperAbstract">Today&rsquo;s Large Audio Language Models are stuck in an <strong>offline paradigm</strong>: you hand them a finished clip and wait for one reply. Streaming models exist, but each only handles a single, isolated task. We formalize the missing capability as a new concept, the <strong>Audio Interaction Model</strong>, and build the first one. <strong>AudioInteraction</strong> is a unified, always-on model that runs conventional <strong>offline tasks (ASR, S2TT)</strong>, runs <strong>streaming tasks in real time</strong>, and achieves <strong>general streaming audio instruction following on a live stream</strong>, all inside a <strong>single all-in-one model</strong> that keeps listening and decides for itself when to speak.</p>
+    <p class="paper-abstract" data-i18n="paperAbstract">Audio is an inherently interactive modality, yet today&rsquo;s <strong>Large Audio Language Models</strong> are <strong>offline</strong>, and <strong>streaming</strong> ones each handle only a <strong>single task</strong> such as streaming ASR or voice chatting. We formalize a new paradigm, the <strong>Audio Interaction Model</strong>, and realize it with <strong>Audio-Interaction</strong>: a unified streaming model that, through an always-on <strong>perceive-decide-respond loop</strong>, listens to sound, environment, and instructions in real time and decides on its own <strong>when to respond</strong> from the semantics of the stream. A single architecture unifies all offline and real-time tasks and gives rise to many new capabilities.</p>
 
     <!-- ===================== LINK BUTTONS (5) ===================== -->
     <div class="link-row">
@@ -317,7 +364,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span data-i18n="btnReport">Technical Report</span>
       </a>
-      <a href="https://github.com/AudioInteraction/AudioInteraction" class="pill dark" target="_blank" rel="noopener noreferrer">
+      <a href="https://github.com/xzf-thu/Audio-Interaction/" class="pill dark" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.67 5.56.67 11.83c0 5.02 3.25 9.27 7.76 10.77.57.1.78-.25.78-.55v-2.13c-3.16.69-3.83-1.36-3.83-1.36-.52-1.31-1.27-1.66-1.27-1.66-1.03-.7.08-.69.08-.69 1.14.08 1.74 1.17 1.74 1.17 1.01 1.74 2.66 1.24 3.31.95.1-.74.4-1.24.72-1.53-2.52-.29-5.17-1.26-5.17-5.6 0-1.24.44-2.25 1.17-3.04-.12-.29-.51-1.44.11-2.99 0 0 .95-.3 3.12 1.16.91-.25 1.88-.38 2.85-.39.97.01 1.94.14 2.85.39 2.17-1.46 3.12-1.16 3.12-1.16.62 1.55.23 2.7.11 2.99.73.79 1.17 1.8 1.17 3.04 0 4.35-2.66 5.31-5.19 5.59.41.35.77 1.04.77 2.1v3.11c0 .3.21.66.79.55 4.5-1.5 7.75-5.75 7.75-10.77C23.33 5.56 18.27.5 12 .5z"/></svg>
         Code
       </a>
@@ -329,9 +376,9 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         X
       </a>
-      <a href="https://github.com/AudioInteraction/AudioInteraction" class="pill try" target="_blank" rel="noopener noreferrer">
+      <a href="https://github.com/xzf-thu/Audio-Interaction/" class="pill try" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <span data-i18n="btnTry">Try AudioInteraction</span>
+        <span data-i18n="btnTry">Try Audio-Interaction</span>
       </a>
     </div>
 
@@ -347,10 +394,10 @@
 
   <!-- ===================== YOUTUBE PROMO VIDEO ===================== -->
   <section class="video-section">
-    <p class="video-label" data-i18n="videoLabel">Watch AudioInteraction listen, decide and speak, live</p>
+    <p class="video-label" data-i18n="videoLabel">Watch Audio-Interaction listen, decide and speak, live</p>
     <div class="video-wrap">
       <div class="video-frame">
-        <iframe src="https://www.youtube.com/embed/r1S4xiUBg9s" title="AudioInteraction running live"
+        <iframe src="https://www.youtube.com/embed/4YuBkMm1cmU" title="Audio-Interaction running live"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen></iframe>
       </div>
@@ -361,7 +408,7 @@
   <section class="block">
     <div class="section-head">
       <h2 data-i18n="samplesH2">Native Streaming Audio Understanding</h2>
-      <p data-i18n="samplesIntro">AudioInteraction is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.</p>
+      <p data-i18n="samplesIntro">Audio-Interaction is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.</p>
     </div>
 
     <div class="table-wrap">
@@ -370,7 +417,7 @@
           <thead>
             <tr>
               <th class="col-clip" data-i18n="thClip">Clip</th>
-              <th class="col-ours ours-col"><span class="model-name">AudioInteraction</span><span class="vendor ours">[Ours]</span></th>
+              <th class="col-ours ours-col"><span class="model-name">Audio-Interaction</span><span class="vendor ours">[Ours]</span></th>
               <th class="col-other"><span class="model-name">gpt-audio</span><span class="vendor">by OpenAI</span></th>
               <th class="col-other"><span class="model-name">gemini-omni</span><span class="vendor">by Google</span></th>
             </tr>
@@ -468,54 +515,27 @@
   <section class="block">
     <div class="section-head">
       <h2 data-i18n="resH2">Results</h2>
-      <p data-i18n="resIntro">AudioInteraction keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.</p>
+      <p data-i18n="resIntro">Audio-Interaction keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.</p>
     </div>
 
-    <div class="results-tabs" role="tablist">
-      <button class="tab-btn active" data-index="0" role="tab" aria-selected="true"  data-i18n="resTab1">Foundation</button>
-      <button class="tab-btn"        data-index="1" role="tab" aria-selected="false" data-i18n="resTab2">Speech input</button>
-      <button class="tab-btn"        data-index="2" role="tab" aria-selected="false" data-i18n="resTab3">Proactive</button>
-    </div>
+    <div class="results-stack">
 
-    <div class="results-stage" id="resultsStage">
-      <button class="nav-arrow prev" id="resultsPrev" aria-label="Previous">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div class="results-track" id="resultsTrack">
-
-        <div class="results-panel">
-          <p class="panel-eyebrow" data-i18n="rcTag1">Foundation</p>
-          <h3 class="panel-title" data-i18n="rcTitle1">Basic ability preserved</h3>
-          <p class="panel-body" data-i18n="rcBody1">Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.</p>
-          <img src="figures/result1.png" alt="Result 1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-          <div class="panel-placeholder" style="display:none;">[ figures/result1.png ]</div>
-        </div>
-
-        <div class="results-panel">
-          <p class="panel-eyebrow" data-i18n="rcTag2">Speech input</p>
-          <h3 class="panel-title" data-i18n="rcTitle2">Markedly stronger</h3>
-          <p class="panel-body" data-i18n="rcBody2">On speech-driven tasks the model is clearly stronger, tracking and responding to live speech as it arrives.</p>
-          <img src="figures/result2.png" alt="Result 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-          <div class="panel-placeholder" style="display:none;">[ figures/result2.png ]</div>
-        </div>
-
-        <div class="results-panel proactive">
-          <p class="panel-eyebrow" data-i18n="rcTag3">Proactive</p>
-          <h3 class="panel-title" data-i18n="rcTitle3">Best-in-class intervention</h3>
-          <p class="panel-body" data-i18n="rcBody3">The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.</p>
-          <img src="figures/result3.png" alt="Result 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-          <div class="panel-placeholder" style="display:none;">[ figures/result3.png ]</div>
-        </div>
-
+      <div class="result-card">
+        <p class="panel-eyebrow" data-i18n="rcTag1">Foundation</p>
+        <h3 class="panel-title" data-i18n="rcTitle1">Basic ability preserved</h3>
+        <p class="panel-body" data-i18n="rcBody1">Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.</p>
+        <img src="figures/result1.png" alt="Foundation results" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="panel-placeholder" style="display:none;">[ figures/result1.png ]</div>
       </div>
-      <button class="nav-arrow next" id="resultsNext" aria-label="Next">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
-    <div class="results-dots" id="resultsDots">
-      <button class="dot active" data-index="0" aria-label="Slide 1"></button>
-      <button class="dot"        data-index="1" aria-label="Slide 2"></button>
-      <button class="dot"        data-index="2" aria-label="Slide 3"></button>
+
+      <div class="result-card proactive">
+        <p class="panel-eyebrow" data-i18n="rcTag3">Proactive</p>
+        <h3 class="panel-title" data-i18n="rcTitle3">Best-in-class intervention</h3>
+        <p class="panel-body" data-i18n="rcBody3">The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.</p>
+        <img src="figures/result2.png" alt="Proactive intervention results" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="panel-placeholder" style="display:none;">[ figures/result2.png ]</div>
+      </div>
+
     </div>
   </section>
 
@@ -528,11 +548,11 @@
          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
     <div class="mountain-fallback" style="display:none;"></div>
     <div class="mountain-content">
-      <h3 data-i18n="expH">Experience AudioInteraction</h3>
+      <h3 data-i18n="expH">Experience Audio-Interaction</h3>
       <p class="mountain-sub" data-i18n="expSub">One unbroken session, one model. It listens, decides, and speaks, live.</p>
-      <a href="https://github.com/AudioInteraction/AudioInteraction" class="experience-cta" target="_blank" rel="noopener noreferrer">
+      <a href="https://github.com/xzf-thu/Audio-Interaction/" class="experience-cta" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <span data-i18n="expCta">Try AudioInteraction</span>
+        <span data-i18n="expCta">Try Audio-Interaction</span>
       </a>
       <p class="mountain-footnote" data-i18n="expFoot">Offline audio answers a finished clip. Real audio needs a model that keeps listening, and decides, moment to moment, when to speak.</p>
     </div>
@@ -567,32 +587,6 @@
 </script>
 
 <script>
-  // ---------- Results slider ----------
-  (function() {
-    var track = document.getElementById('resultsTrack');
-    var prevBtn = document.getElementById('resultsPrev');
-    var nextBtn = document.getElementById('resultsNext');
-    var tabBtns = document.querySelectorAll('.results-tabs .tab-btn');
-    var dots = document.querySelectorAll('.results-dots .dot');
-    if (!track) return;
-    var index = 0, total = 3;
-    function go(i) {
-      index = (i + total) % total;
-      track.style.transform = 'translateX(' + (-(index * (100 / total))) + '%)';
-      tabBtns.forEach(function(b) { var on = parseInt(b.dataset.index,10)===index; b.classList.toggle('active', on); b.setAttribute('aria-selected', on?'true':'false'); });
-      dots.forEach(function(d) { d.classList.toggle('active', parseInt(d.dataset.index,10)===index); });
-    }
-    tabBtns.forEach(function(b) { b.addEventListener('click', function(){ go(parseInt(b.dataset.index,10)); }); });
-    dots.forEach(function(d) { d.addEventListener('click', function(){ go(parseInt(d.dataset.index,10)); }); });
-    prevBtn.addEventListener('click', function(){ go(index-1); });
-    nextBtn.addEventListener('click', function(){ go(index+1); });
-    var startX = null, stage = document.getElementById('resultsStage');
-    stage.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; }, { passive:true });
-    stage.addEventListener('touchend', function(e){ if (startX===null) return; var dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx)>40) go(index + (dx<0?1:-1)); startX=null; }, { passive:true });
-  })();
-</script>
-
-<script>
   // ---------- WeChat modal ----------
   (function() {
     var link = document.getElementById('wechatLink');
@@ -612,16 +606,16 @@
   (function() {
     var dict = {
       en: {
-        paperTitle: '<span class="paper-name">Audio Interaction Models',
-        missionLine: 'The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.',
+        paperTitle: '<span class="paper-name">Audio-Interaction:</span> Towards Unified Audio Interaction Models<br/>that Continuously Perceive, Decide and Respond',
+        missionLine: '<span class="open-badge">Fully Open</span>The next-generation audio-language model. A <strong>streaming brain for interaction</strong>.',
         authors: '<span class="name">Zhifei Xie</span><sup>1*</sup>, <span class="name">Zihang Liu</span><sup>2*</sup>, <span class="name">Ze An</span><sup>2</sup>, <span class="name">Ziyang Ma</span><sup>1</sup>, <span class="name">Xiaobin Hu</span><sup>2</sup><br/><span class="name">Mingbao Lin</span><sup>2&dagger;</sup>, <span class="name">Deheng Ye</span><sup>1&dagger;</sup>, <span class="name">Shuicheng Yan</span><sup>2&dagger;</sup>, <span class="name">Chunyan Miao</span><sup>1&dagger;</sup>',
         affiliations: '<span class="aff-num">1</span>NTU &nbsp;&nbsp; <span class="aff-num">2</span>NUS',
-        paperAbstract: 'Today&rsquo;s Large Audio Language Models are stuck in an <strong>offline paradigm</strong>: you hand them a finished clip and wait for one reply. Streaming models exist, but each only handles a single, isolated task. We formalize the missing capability as a new concept, the <strong>Audio Interaction Model</strong>, and build the first one. <strong>AudioInteraction</strong> is a unified, always-on model that runs conventional <strong>offline tasks (ASR, S2TT)</strong>, runs <strong>streaming tasks in real time</strong>, and achieves <strong>general streaming audio instruction following on a live stream</strong>, all inside a <strong>single all-in-one model</strong> that keeps listening and decides for itself when to speak.',
-        btnReport: 'Technical Report', btnTry: 'Try AudioInteraction',
-        videoLabel: 'Watch AudioInteraction listen, decide and speak, live',
+        paperAbstract: 'Audio is an inherently interactive modality, yet today&rsquo;s Large Audio Language Models are offline, and streaming ones each handle only a single task such as streaming ASR or voice chatting. We formalize a new paradigm, the <strong>Audio Interaction Model</strong>, and realize it with <strong>Audio-Interaction</strong>: a unified streaming model that, through an always-on <strong>perceive-decide-respond loop</strong>, listens to sound, environment, and instructions in real time and decides on its own <strong>when to respond</strong> from the semantics of the stream. A single architecture unifies all offline and real-time tasks and gives rise to many new capabilities.',
+        btnReport: 'Technical Report', btnTry: 'Try Audio-Interaction',
+        videoLabel: 'Watch Audio-Interaction listen, decide and speak, live',
 
         samplesH2: 'Native Streaming Audio Understanding',
-        samplesIntro: 'AudioInteraction is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.',
+        samplesIntro: 'Audio-Interaction is trained for native streaming audio understanding: every task stops being a separate model and becomes a single instruction inside one model. It goes further than instructions. With no prompt at all, it decides on its own when a moment is worth speaking to, and acts proactively.',
         thClip: 'Clip',
         s1Scene: 'Counting a repeating sound, live',
         s1Gpt: 'Waits for the whole clip, then returns one summary. Never produces a running count as each event lands.',
@@ -639,28 +633,28 @@
         dsCaption: '<span class="lead">StreamAudio-2M</span> covers <strong>seven core capabilities</strong>: <em>audio understanding, real-time ASR, speech translation, voice chatting, proactive response, and environment-aware agent</em>. It is built by collecting clips from real-world datasets (<strong>AudioSet, CommonVoice, CoVoST2, MOSS</strong>, and more), synthesizing text into speech with <strong>CosyVoice</strong>, then concatenating them into streaming sequences with environmental noise and <strong>token-level annotation</strong>.',
 
         resH2: 'Results',
-        resIntro: 'AudioInteraction keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.',
+        resIntro: 'Audio-Interaction keeps its foundational capabilities intact while becoming markedly stronger on speech-driven input, and it shows the strongest proactive intervention of every model we compare against.',
         resTab1: 'Foundation', resTab2: 'Speech input', resTab3: 'Proactive',
         rcTag1: 'Foundation', rcTitle1: 'Basic ability preserved', rcBody1: 'Offline recognition and translation stay on par with strong baselines, so nothing is lost by going always-on.',
         rcTag2: 'Speech input', rcTitle2: 'Markedly stronger', rcBody2: 'On speech-driven tasks the model is clearly stronger, tracking and responding to live speech as it arrives.',
         rcTag3: 'Proactive', rcTitle3: 'Best-in-class intervention', rcBody3: 'The strongest proactive intervention of any model we test: it knows not just what to say, but when to say it.',
 
-        expH: 'Experience AudioInteraction',
+        expH: 'Experience Audio-Interaction',
         expSub: 'One unbroken session, one model. It listens, decides, and speaks, live.',
-        expCta: 'Try AudioInteraction',
+        expCta: 'Try Audio-Interaction',
         expFoot: 'Offline audio answers a finished clip. Real audio needs a model that keeps listening, and decides, moment to moment, when to speak.'
       },
       zh: {
-        paperTitle: '<span class="paper-name">AudioInteraction：</span> 迈向统一的 Audio Interaction Model<br/>持续地感知、决策与响应',
-        missionLine: '下一代音频语言模型。一颗<strong>用于交互的流式大脑</strong>。',
+        paperTitle: '<span class="paper-name">Audio-Interaction：</span> 迈向统一的 Audio Interaction Model<br/>持续地感知、决策与响应',
+        missionLine: '<span class="open-badge">Fully Open</span>下一代音频语言模型。一颗<strong>用于交互的流式大脑</strong>。',
         authors: '<span class="name">谢知非</span><sup>1*</sup>，<span class="name">刘子航</span><sup>2*</sup>，<span class="name">安泽</span><sup>2</sup>，<span class="name">马子阳</span><sup>1</sup>，<span class="name">胡晓彬</span><sup>2</sup><br/><span class="name">林明宝</span><sup>2&dagger;</sup>，<span class="name">叶德珩</span><sup>1&dagger;</sup>，<span class="name">颜水成</span><sup>2&dagger;</sup>，<span class="name">缪春燕</span><sup>1&dagger;</sup>',
         affiliations: '<span class="aff-num">1</span>南洋理工大学（NTU） &nbsp;&nbsp; <span class="aff-num">2</span>新加坡国立大学（NUS）',
-        paperAbstract: '当今的大型音频语言模型仍停留在<strong>离线范式</strong>：你递给它一段完整音频，然后等待一次回复。流式模型虽然存在，但每个都只能处理单一、孤立的任务。我们将这一缺失的能力形式化为一个新概念，即 <strong>Audio Interaction Model</strong>，并构建了第一个这样的模型。<strong>AudioInteraction</strong> 是一个统一、常驻的模型，既能运行传统的<strong>离线任务（ASR、S2TT）</strong>，又能<strong>实时运行流式任务</strong>，并在<strong>实时音频流上实现通用的流式音频指令跟随</strong>；这一切都在<strong>单一的一体化模型</strong>中完成：它持续聆听，并自行决定何时开口。',
-        btnReport: '技术报告', btnTry: '试用 AudioInteraction',
-        videoLabel: '观看 AudioInteraction 实时聆听、决策与开口',
+        paperAbstract: '音频本质上是一种交互式模态，然而当今的大型音频语言模型仍是<strong>离线</strong>的，而流式模型又各自只能处理<strong>单一任务</strong>，例如流式 ASR 或语音对话。我们形式化了一个新范式——<strong>Audio Interaction Model</strong>，并以 <strong>Audio-Interaction</strong> 将其实现：一个统一的流式模型，通过常驻的 <strong>perceive-decide-respond 闭环</strong>，实时聆听声音、环境与指令，并从音频流的语义中自行决定<strong>何时响应</strong>。单一架构统一了所有离线与实时任务，并催生出许多全新的能力。',
+        btnReport: '技术报告', btnTry: '试用 Audio-Interaction',
+        videoLabel: '观看 Audio-Interaction 实时聆听、决策与开口',
 
         samplesH2: '原生流式音频理解',
-        samplesIntro: 'AudioInteraction 面向原生流式音频理解进行训练：每个任务不再需要一个单独的模型，而只是同一个模型里的一条指令。它甚至比指令走得更远，在没有任何提示时也能自行判断此刻是否值得开口，主动介入。',
+        samplesIntro: 'Audio-Interaction 面向原生流式音频理解进行训练：每个任务不再需要一个单独的模型，而只是同一个模型里的一条指令。它甚至比指令走得更远，在没有任何提示时也能自行判断此刻是否值得开口，主动介入。',
         thClip: '音频',
         s1Scene: '对重复出现的声音实时计数',
         s1Gpt: '等整段音频结束才返回一句总结，无法在每个事件落地时给出实时计数。',
@@ -678,15 +672,15 @@
         dsCaption: '<span class="lead">StreamAudio-2M</span> 覆盖<strong>七种核心能力</strong>：<em>音频理解、实时 ASR、语音翻译、语音对话、主动响应与环境感知 agent</em>。它通过从真实世界数据集（<strong>AudioSet、CommonVoice、CoVoST2、MOSS</strong> 等）采集片段，用 <strong>CosyVoice</strong> 将文本合成为语音，再将其拼接为带环境噪声与 <strong>token 级标注</strong>的流式序列而构建。',
 
         resH2: '实验结果',
-        resIntro: 'AudioInteraction 保持了基本能力，同时在以语音为主的输入上明显变强；并且在我们对比的所有模型中拥有最强的主动介入能力。',
+        resIntro: 'Audio-Interaction 保持了基本能力，同时在以语音为主的输入上明显变强；并且在我们对比的所有模型中拥有最强的主动介入能力。',
         resTab1: '基础能力', resTab2: '语音输入', resTab3: '主动介入',
         rcTag1: '基础能力', rcTitle1: '基本能力得以保持', rcBody1: '离线识别与翻译与强基线持平，转向常驻并不会损失原有能力。',
         rcTag2: '语音输入', rcTitle2: '明显变强', rcBody2: '在以语音为主的任务上明显更强，能随语音实时到来而跟踪并回应。',
         rcTag3: '主动介入', rcTitle3: '最强的主动介入', rcBody3: '在我们测试的所有模型中拥有最强的主动介入能力：它不仅知道说什么，更知道何时该说。',
 
-        expH: '体验 AudioInteraction',
+        expH: '体验 Audio-Interaction',
         expSub: '一段不中断的会话、一个模型：它实时地聆听、决策并开口。',
-        expCta: '试用 AudioInteraction',
+        expCta: '试用 Audio-Interaction',
         expFoot: '离线音频回答的是一段完整的片段。真实音频需要一个持续聆听的模型，并时刻判断何时开口。'
       }
     };
@@ -707,6 +701,76 @@
       b.addEventListener('click', function() { applyLang(b.getAttribute('data-lang')); });
     });
     applyLang('en');
+  })();
+</script>
+
+<!-- ===================== CURSOR GLOW + RIPPLES ===================== -->
+<div id="cursor-glow" aria-hidden="true"></div>
+
+<script>
+  // ---------- Cursor glow (rAF lerp, self-stopping) + pooled ripples ----------
+  (function() {
+    var glow = document.getElementById('cursor-glow');
+    if (!glow) return;
+    var noFancy = window.matchMedia &&
+      (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+       window.matchMedia('(hover: none)').matches);
+    if (noFancy) return;
+
+    // --- glow follow: only runs frames while it is catching up to the pointer ---
+    var tgtX = 0, tgtY = 0, curX = 0, curY = 0;
+    var running = false, primed = false;
+    var EASE = 0.16;          // lower = more lag/trail
+
+    function frame() {
+      curX += (tgtX - curX) * EASE;
+      curY += (tgtY - curY) * EASE;
+      glow.style.transform = 'translate3d(' + curX + 'px,' + curY + 'px,0)';
+      if (Math.abs(tgtX - curX) > 0.4 || Math.abs(tgtY - curY) > 0.4) {
+        requestAnimationFrame(frame);
+      } else {
+        // snap and idle: no rAF runs while the pointer is still
+        glow.style.transform = 'translate3d(' + tgtX + 'px,' + tgtY + 'px,0)';
+        running = false;
+      }
+    }
+    function kick() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+    // --- ripple pool: a handful of reused nodes, no create/destroy churn ---
+    var POOL = 8, pool = [], pi = 0;
+    for (var i = 0; i < POOL; i++) {
+      var el = document.createElement('div');
+      el.className = 'cursor-ripple';
+      document.body.appendChild(el);
+      pool.push(el);
+    }
+    function ripple(x, y) {
+      var el = pool[pi]; pi = (pi + 1) % POOL;
+      el.style.setProperty('--x', x + 'px');
+      el.style.setProperty('--y', y + 'px');
+      el.classList.remove('go');
+      void el.offsetWidth;        // restart the CSS animation
+      el.classList.add('go');
+    }
+
+    // --- single mousemove handler: cheap math, no per-frame style writes here ---
+    var lastRX = -9999, lastRY = -9999, lastRT = 0;
+    document.addEventListener('mousemove', function(e) {
+      tgtX = e.clientX; tgtY = e.clientY;
+      if (!primed) { curX = tgtX; curY = tgtY; primed = true; glow.style.opacity = '1'; }
+      kick();
+
+      var now = e.timeStamp || performance.now();
+      var dx = tgtX - lastRX, dy = tgtY - lastRY;
+      if ((dx * dx + dy * dy) > 1100 && (now - lastRT) > 110) {   // ~33px and 110ms apart
+        ripple(tgtX, tgtY);
+        lastRX = tgtX; lastRY = tgtY; lastRT = now;
+      }
+    }, { passive: true });
+
+    document.addEventListener('mousedown', function(e) { ripple(e.clientX, e.clientY); }, { passive: true });
+    document.addEventListener('mouseleave', function() { glow.style.opacity = '0'; });
+    document.addEventListener('mouseenter', function() { glow.style.opacity = '1'; });
   })();
 </script>
 

@@ -1,4 +1,4 @@
-# Audio-Interaction: Towards Unified Audio Interaction Model
+# Audio Interaction Model
 
 <p align="center">
   <img src="assets/figures/top.png" alt="AudioInteraction Logo" width="100%">
@@ -339,6 +339,58 @@ Each line is one streaming sequence made of multiple turns:
 ```
 
 Set `assistant` to `"<no need to response>"` for a turn where the model should stay silent.
+
+## <a id="evaluation"></a>📊 Experimental results of Audio-Interaction
+
+### Table 1: Results on MMAU Benchmark
+
+| Model | Size | Stream. | Multi-turn | Text Sound | Text Music | Text Speech | Text Avg. | Audio Sound | Audio Music | Audio Speech | Audio Avg. |
+|---|---:|:---:|:---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **_Large Audio Language Models_** |  |  |  |  |  |  |  |  |  |  |  |
+| Audio Flamingo 2 | 3B | ✗ | ✗ | **71.47** | **70.96** | 44.74 | 62.40 | 1.50 | 1.49 | 0.35 | 1.16 |
+| Qwen2-Audio-Instruct | 8.4B | ✗ | ✓ | 54.95 | 50.98 | 42.04 | 49.20 | 22.32 | 19.16 | 16.31 | 19.41 |
+| Voxtral-Mini | 3B | ✗ | ✓ | 58.56 | 49.70 | 43.53 | 50.60 | 46.08 | 34.13 | 30.50 | 37.24 |
+| Audio-Reasoner | 8.4B | ✗ | ✗ | 60.06 | 64.30 | **60.70** | 61.71 | 20.48 | 26.65 | 13.48 | 20.57 |
+| **_Omni Language Models_** |  |  |  |  |  |  |  |  |  |  |  |
+| Qwen2.5-Omni | 3B | ✗ | ✓ | 65.36 | 48.94 | 57.78 | 57.81 | 51.81 | 44.01 | 29.79 | 42.51 |
+| Qwen2.5-Omni | 7B | ✗ | ✓ | <u>67.87</u> | <u>69.16</u> | <u>59.76</u> | **65.60** | 60.54 | <u>50.90</u> | <u>35.11</u> | <u>49.58</u> |
+| Phi-4-multimodal | 7B | ✗ | ✓ | 60.97 | 52.87 | 52.83 | 55.56 | 44.65 | 27.84 | 21.99 | 31.75 |
+| Baichuan-Omni-1.5 | 11B | ✗ | ✓ | 65.47 | 58.98 | 55.26 | 59.90 | 57.53 | 36.53 | 24.82 | 40.40 |
+| **_Streaming Audio Language Models_** |  |  |  |  |  |  |  |  |  |  |  |
+| **Audio-Interaction** | **3B** | **✓** | **✓** | 64.12 | 47.80 | 55.13 | 55.68 | **65.63** | **57.93** | **39.68** | **58.15** |
+
+### Table 2: Performance on Spoken-Dialogue Benchmarks
+
+| Model | Size | SpokenQA LLa. Q. | SpokenQA Web Q. | Voicebench Alpa. | Voicebench SD-QA |
+|---|---:|---:|---:|---:|---:|
+| **_Specialized Models_** |  |  |  |  |  |
+| Moshi | 7B | 62.20 | 26.30 | 2.01 | 15.01 |
+| Freeze-Omni | 7B | 72.00 | 44.73 | 4.14 | 50.16 |
+| **_Omni & Audio Language Models_** |  |  |  |  |  |
+| Baichuan-Omni-1.5 | 7B | **78.50** | <u>59.10</u> | **4.50** | 43.40 |
+| Qwen2-Audio | 7B | 69.67 | 45.20 | 3.74 | 35.71 |
+| Qwen2.5-Omni | 3B | 66.00 | 27.95 | 4.32 | 49.37 |
+| Qwen2.5-Omni | 7B | 75.33 | **62.80** | <u>4.49</u> | **55.71** |
+| Phi-4-multimodal | 7B | 60.2 | 26.6 | 3.81 | 39.78 |
+| **_Streaming Audio Language Models_** |  |  |  |  |  |
+| **Audio-Interaction** | **3B** | 67.31 | 54.34 | 4.28 | <u>52.14</u> |
+
+### Table 3: ASR WER and S2TT BLEU on LibriSpeech and CoVoST2
+
+| Model | Size | ASR Clean ↓ | ASR Other ↓ | S2TT en-zh ↑ | S2TT zh-en ↑ |
+|---|---:|---:|---:|---:|---:|
+| **_Specialized Models_** |  |  |  |  |  |
+| Canary | 1B | **1.48** | **2.93** | - | - |
+| Canary-Qwen | 2.5B | 1.49 | <u>3.10</u> | - | - |
+| **_Omni & Audio Language Models_** |  |  |  |  |  |
+| Baichuan-Omni-1.5 | 7B | 5.71 | 10.09 | - | - |
+| Qwen2-Audio | 7B | 1.60 | 3.60 | 45.20 | 24.40 |
+| Qwen2.5-Omni | 3B | 2.87 | 5.90 | 39.50 | 18.17 |
+| Qwen2.5-Omni | 7B | <u>1.80</u> | 3.40 | 41.40 | <u>29.40</u> |
+| Phi-4-multimodal | 5.6B | 1.69 | 3.82 | <u>46.30</u> | 22.39 |
+| **_Streaming Audio Language Models_** |  |  |  |  |  |
+| **Audio-Interaction** | **3B** | 3.17 | 6.04 | **55.22** | **35.21** |
+
 
 ## Acknowledgements
 
